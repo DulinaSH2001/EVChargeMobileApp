@@ -4,7 +4,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/background_light">
+    android:background="@color/background_light"
+    android:paddingBottom="32dp">
 
     <!-- Tab Layout for booking categories -->
     <com.google.android.material.tabs.TabLayout

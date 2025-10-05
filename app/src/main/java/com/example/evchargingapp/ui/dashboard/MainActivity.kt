@@ -53,16 +53,16 @@ class MainActivity : AppCompatActivity() {
                     loadFragment(DashboardFragment())
                     true
                 }
-                R.id.nav_bookings -> {
+                R.id.nav_create_booking -> {
+                    loadFragment(BookingFragment())
+                    true
+                }
+                R.id.nav_my_bookings -> {
                     loadFragment(MyBookingsFragment())
                     true
                 }
                 R.id.nav_profile -> {
                     loadFragment(ProfileFragment())
-                    true
-                }
-                R.id.nav_logout -> {
-                    performLogout()
                     true
                 }
                 else -> false
@@ -93,17 +93,12 @@ class MainActivity : AppCompatActivity() {
     
     // Method to be called from DashboardFragment for navigation
     fun navigateToBookings() {
-        bottomNavigation.selectedItemId = R.id.nav_bookings
+        bottomNavigation.selectedItemId = R.id.nav_my_bookings
     }
     
     // Method to handle new booking creation
     fun createNewBooking() {
-        // TODO: Navigate to new booking activity/fragment
-        android.widget.Toast.makeText(
-            this,
-            "Opening new booking form...",
-            android.widget.Toast.LENGTH_SHORT
-        ).show()
+        bottomNavigation.selectedItemId = R.id.nav_create_booking
     }
     
     // Method to handle QR scanning
