@@ -4,103 +4,219 @@ import android.content.Intent
 import android.os.Bundle
 import android.text.TextUtils
 import android.util.Log
+import android.view.View
 import android.widget.EditText
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.button.MaterialButton
 import com.example.evchargingapp.ui.dashboard.MainActivity
 import com.example.evchargingapp.R
-import com.example.evchargingapp.data.local.UserDbHelper
+import com.example.evchargingapp.data.local.User
+import com.example.evchargingapp.data.local.UserType
+import com.example.evchargingapp.data.repository.AuthRepository
+import com.example.evchargingapp.data.repository.AuthResult
 import com.example.evchargingapp.utils.SessionManager
+import com.example.evchargingapp.utils.OfflineManager
+import kotlinx.coroutines.launch
 
 class LoginActivity : AppCompatActivity() {
     
-    private lateinit var nicInput: EditText
+    private lateinit var identifierInput: EditText
     private lateinit var passwordInput: EditText
+    private lateinit var progressBar: ProgressBar
+    private lateinit var btnLogin: MaterialButton
+    private lateinit var btnRegister: TextView
+    private lateinit var btnEvOwner: MaterialButton
+    private lateinit var btnStationOperator: MaterialButton
+    private lateinit var statusText: TextView
+    private lateinit var inputLayoutIdentifier: com.google.android.material.textfield.TextInputLayout
+    
+    private var currentUserType: UserType = UserType.EV_OWNER
+    
     private lateinit var sessionManager: SessionManager
-    private lateinit var dbHelper: UserDbHelper
+    private lateinit var authRepository: AuthRepository
+    private lateinit var offlineManager: OfflineManager
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
         
-        nicInput = findViewById(R.id.input_nic)
+        initializeComponents()
+        setupListeners()
+        updateUIForUserType()
+        checkOfflineStatus()
+    }
+    
+    private fun initializeComponents() {
+        // Initialize views
+        identifierInput = findViewById(R.id.input_identifier)
         passwordInput = findViewById(R.id.input_password)
+        progressBar = findViewById(R.id.progress_bar)
+        btnLogin = findViewById(R.id.btn_login)
+        btnRegister = findViewById(R.id.btn_register)
+        btnEvOwner = findViewById(R.id.btn_ev_owner)
+        btnStationOperator = findViewById(R.id.btn_station_operator)
+        statusText = findViewById(R.id.status_text)
+        inputLayoutIdentifier = findViewById(R.id.input_layout_identifier)
+        
+        // Initialize components
         sessionManager = SessionManager(this)
-        dbHelper = UserDbHelper(this)
-        
-        // Add test users for demonstration
-        addTestUsers()
-        
-        val btnLogin = findViewById<MaterialButton>(R.id.btn_login)
-        val btnRegister = findViewById<TextView>(R.id.btn_register)
-        val btnOperator = findViewById<MaterialButton?>(R.id.btn_operator)
-        
+        authRepository = AuthRepository(this)
+        offlineManager = OfflineManager(this)
+    }
+    
+    private fun setupListeners() {
         btnLogin.setOnClickListener { attemptLogin() }
         btnRegister.setOnClickListener { 
             startActivity(Intent(this, RegisterActivity::class.java))
         }
         
-        btnOperator?.setOnClickListener {
-            // Quick operator login
-            sessionManager.setOperatorLogin("Operator")
-            startActivity(Intent(this, MainActivity::class.java))
-            finish()
+        // User type selection listeners
+        btnEvOwner.setOnClickListener {
+            selectUserType(UserType.EV_OWNER)
+        }
+        
+        btnStationOperator.setOnClickListener {
+            selectUserType(UserType.STATION_OPERATOR)
+        }
+    }
+    
+    private fun selectUserType(userType: UserType) {
+        currentUserType = userType
+        updateUIForUserType()
+    }
+    
+    private fun updateUIForUserType() {
+        val isEvOwner = currentUserType == UserType.EV_OWNER
+        
+        // Update button styles
+        btnEvOwner.backgroundTintList = resources.getColorStateList(
+            if (isEvOwner) R.color.primary_blue else android.R.color.transparent, null
+        )
+        btnEvOwner.setTextColor(resources.getColor(
+            if (isEvOwner) R.color.text_white else R.color.text_secondary, null
+        ))
+        
+        btnStationOperator.backgroundTintList = resources.getColorStateList(
+            if (!isEvOwner) R.color.primary_blue else android.R.color.transparent, null
+        )
+        btnStationOperator.setTextColor(resources.getColor(
+            if (!isEvOwner) R.color.text_white else R.color.text_secondary, null
+        ))
+        
+        // Update input field
+        inputLayoutIdentifier.hint = if (isEvOwner) "NIC" else "Email"
+        identifierInput.inputType = if (isEvOwner) 
+            android.text.InputType.TYPE_CLASS_TEXT else 
+            android.text.InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
+            
+        identifierInput.text?.clear()
+    }
+    
+    private fun checkOfflineStatus() {
+        offlineManager.showOfflineNotification { message ->
+            statusText.text = message
+            statusText.visibility = View.VISIBLE
         }
     }
     
     private fun attemptLogin() {
-        val nic = nicInput.text.toString().trim()
+        val identifier = identifierInput.text.toString().trim()
         val password = passwordInput.text.toString()
         
-        if (TextUtils.isEmpty(nic)) {
-            nicInput.error = "NIC required"
-            return
-        }
-        if (TextUtils.isEmpty(password)) {
-            passwordInput.error = "Password required"
-            return
-        }
+        if (!validateInput(identifier, password)) return
         
-        // Try local DB first (since API not available here)
-        Log.d("LoginActivity", "Attempting login for NIC: $nic")
-        val user = dbHelper.getUserByNic(nic)
-        Log.d("LoginActivity", "Found user: ${user?.name}")
-        
-        if (user != null && password == user.password) {
-            Log.d("LoginActivity", "Login successful for user: ${user.name}")
-            sessionManager.saveLogin(user)
-            startActivity(Intent(this, MainActivity::class.java))
-            finish()
-            return
+        setLoadingState(true)
+        lifecycleScope.launch {
+            try {
+                val result = authRepository.loginHybrid(identifier, password, currentUserType)
+                when (result) {
+                    is AuthResult.Success -> handleLoginSuccess(result.user, result.token, result.message)
+                    is AuthResult.Failure -> handleLoginFailure(result.error)
+                }
+            } catch (e: Exception) {
+                Log.e("LoginActivity", "Login error", e)
+                handleLoginFailure("Login failed: ${e.message}")
+            } finally {
+                setLoadingState(false)
+            }
         }
-        
-        Log.d("LoginActivity", "Login failed - Invalid credentials")
-        // TODO: Call remote API here. For now, show error.
-        Toast.makeText(this, "Invalid credentials. Try: test/123 or demo/demo", Toast.LENGTH_LONG).show()
     }
     
-    private fun addTestUsers() {
-        // Add test users for demonstration (only if they don't exist)
-        val testUser1 = com.example.evchargingapp.data.local.User(
-            nic = "test",
-            name = "Test User",
-            email = "test@example.com",
-            phone = "1234567890",
-            password = "123"
-        )
+    private fun validateInput(identifier: String, password: String): Boolean {
+        val fieldName = if (currentUserType == UserType.EV_OWNER) "NIC" else "Email"
         
-        val testUser2 = com.example.evchargingapp.data.local.User(
-            nic = "demo",
-            name = "Demo User", 
-            email = "demo@example.com",
-            phone = "0987654321",
-            password = "demo"
-        )
+        when {
+            TextUtils.isEmpty(identifier) -> {
+                identifierInput.error = "$fieldName required"
+                return false
+            }
+            currentUserType == UserType.STATION_OPERATOR && 
+                !android.util.Patterns.EMAIL_ADDRESS.matcher(identifier).matches() -> {
+                identifierInput.error = "Please enter a valid email address"
+                return false
+            }
+            currentUserType == UserType.EV_OWNER && identifier.length < 10 -> {
+                identifierInput.error = "Please enter a valid NIC"
+                return false
+            }
+            TextUtils.isEmpty(password) -> {
+                passwordInput.error = "Password required"
+                return false
+            }
+        }
+        return true
+    }
+    
+    private fun handleLoginSuccess(user: User, token: String?, message: String?) {
+        Log.d("LoginActivity", "Login successful for user: ${user.name}")
         
-        // Insert test users (will be ignored if they already exist)
-        dbHelper.insertUser(testUser1)
-        dbHelper.insertUser(testUser2)
+        // Check account status
+        if (!user.canLogin()) {
+            Toast.makeText(this, "Account is deactivated. Please contact support.", Toast.LENGTH_LONG).show()
+            return
+        }
+        
+        // Save session with token
+        sessionManager.saveLogin(user, token)
+        
+        // Show success message if any
+        message?.let {
+            Toast.makeText(this, it, Toast.LENGTH_SHORT).show()
+        }
+        
+        // Navigate to main activity
+        val intent = Intent(this, MainActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+        finish()
+    }
+    
+    private fun handleLoginFailure(error: String) {
+        Log.d("LoginActivity", "Login failed: $error")
+        Toast.makeText(this, error, Toast.LENGTH_LONG).show()
+        
+        // Clear password field on failure
+        passwordInput.text.clear()
+    }
+    
+    private fun setLoadingState(isLoading: Boolean) {
+        progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+        val enabled = !isLoading
+        listOf(btnLogin, btnRegister, btnEvOwner, btnStationOperator, identifierInput, passwordInput)
+            .forEach { it.isEnabled = enabled }
+        btnLogin.text = if (isLoading) "Logging in..." else "Login"
+    }
+    
+    override fun onResume() {
+        super.onResume()
+        if (sessionManager.isLoggedIn() && sessionManager.requiresReauth()) {
+            sessionManager.logout()
+            Toast.makeText(this, "Session expired. Please login again.", Toast.LENGTH_SHORT).show()
+        }
+        checkOfflineStatus()
     }
 }
