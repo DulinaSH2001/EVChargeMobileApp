@@ -14,6 +14,7 @@ import kotlinx.coroutines.withContext
 class AuthRepository(private val context: Context) {
     
     private val apiService = ApiConfig.retrofit.create(AuthApiService::class.java)
+    private val authenticatedApiService by lazy { ApiConfig.getAuthenticatedRetrofit(context).create(AuthApiService::class.java) }
     private val networkUtils = NetworkUtils(context)
     private val dbHelper = UserDbHelper(context)
     
@@ -168,6 +169,11 @@ class AuthRepository(private val context: Context) {
         dateOfBirth: String
     ): AuthResult = withContext(Dispatchers.IO) {
         return@withContext try {
+            // Check network availability first - registration requires internet connection
+            if (!networkUtils.isNetworkAvailable()) {
+                return@withContext AuthResult.Failure("Internet connection required for registration")
+            }
+            
             val registerRequest = EvOwnerRegisterRequest(
                 nic = nic,
                 firstName = firstName,
@@ -179,42 +185,38 @@ class AuthRepository(private val context: Context) {
                 dateOfBirth = dateOfBirth
             )
             
-            val user = User(
-                email = nic, // Store NIC in email field for compatibility
-                id = generateUserId(),
-                name = "$firstName $lastName",
-                phone = phone,
-                password = password,
-                role = UserRole.EV_OWNER,
-                isActive = true,
-                lastSyncTime = System.currentTimeMillis(),
-                syncedWithServer = false,
-                address = address,
-                dateOfBirth = dateOfBirth
-            )
+            // Attempt API registration - no local fallback for registration
+            val response = apiService.registerEvOwner(registerRequest)
             
-            // Try remote registration if network available
-            if (networkUtils.isNetworkAvailable()) {
-                try {
-                    val response = apiService.registerEvOwner(registerRequest)
-                    if (response.isSuccessful && response.body()?.success == true) {
-                        user.syncedWithServer = true
-                    }
-                } catch (e: Exception) {
-                    Log.w("AuthRepository", "Remote registration failed, proceeding with local", e)
-                }
-            }
-            
-            val inserted = dbHelper.insertUser(user)
-            if (inserted) {
-                val message = if (user.syncedWithServer) "Registration successful" else "Registered locally. Will sync when connected."
-                AuthResult.Success(user, null, message)
+            if (response.isSuccessful && response.body()?.success == true) {
+                val responseBody = response.body()!!
+                val registeredUser = responseBody.data
+                
+                // Create user object from server response
+                val user = User(
+                    email = email,
+                    id = generateUserId(), // Generate local ID since server doesn't return one for EVOwner registration
+                    name = "$firstName $lastName".trim(),
+                    phone = registeredUser?.phone ?: phone,
+                    password = password, // Keep password for potential future login
+                    role = UserRole.EV_OWNER,
+                    isActive = registeredUser?.isActive ?: true,
+                    lastSyncTime = System.currentTimeMillis(),
+                    syncedWithServer = true, // Always true since we're only using API
+                    address = registeredUser?.address ?: address,
+                    dateOfBirth = registeredUser?.dateOfBirth ?: dateOfBirth
+                )
+                
+                Log.d("AuthRepository", "Registration successful via API for user: ${user.email}")
+                AuthResult.Success(user, null, "Registration successful")
             } else {
-                AuthResult.Failure("Registration failed. User may already exist.")
+                val errorMessage = response.body()?.message ?: "Registration failed"
+                Log.e("AuthRepository", "API registration failed: $errorMessage")
+                AuthResult.Failure("Registration failed: $errorMessage")
             }
             
         } catch (e: Exception) {
-            Log.e("AuthRepository", "EV Owner registration error", e)
+            Log.e("AuthRepository", "Registration error", e)
             AuthResult.Failure("Registration failed: ${e.message}")
         }
     }
@@ -225,7 +227,7 @@ class AuthRepository(private val context: Context) {
                 return@withContext AuthResult.Failure("No internet connection")
             }
             
-            val response = apiService.verifyToken()
+            val response = authenticatedApiService.verifyToken()
             if (response.isSuccessful && response.body()?.success == true) {
                 val verifyData = response.body()!!.data ?: return@withContext AuthResult.Failure("Token verification failed: No data received")
                 
@@ -261,7 +263,7 @@ class AuthRepository(private val context: Context) {
         return@withContext try {
             if (networkUtils.isNetworkAvailable()) {
                 try {
-                    val response = apiService.logout()
+                    val response = authenticatedApiService.logout()
                     if (response.isSuccessful) {
                         Log.d("AuthRepository", "Logged out from server")
                     }
@@ -315,7 +317,7 @@ class AuthRepository(private val context: Context) {
                 return@withContext AuthResult.Failure("No internet connection")
             }
             
-            val response = apiService.getBookingByQr(qrCode)
+            val response = authenticatedApiService.getBookingByQr(qrCode)
             if (response.isSuccessful && response.body()?.success == true) {
                 val bookingData = response.body()!!.data ?: return@withContext AuthResult.Failure("No booking found")
                 AuthResult.Success(User(), null, "Booking found") // Using User for generic response, data would be in custom result
@@ -340,7 +342,7 @@ class AuthRepository(private val context: Context) {
                 startTime = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.getDefault()).format(java.util.Date())
             )
             
-            val response = apiService.confirmBooking(request)
+            val response = authenticatedApiService.confirmBooking(request)
             if (response.isSuccessful && response.body()?.success == true) {
                 AuthResult.Success(User(), null, "Booking confirmed successfully")
             } else {
@@ -366,7 +368,7 @@ class AuthRepository(private val context: Context) {
                 totalCost = totalCost
             )
             
-            val response = apiService.finalizeBooking(request)
+            val response = authenticatedApiService.finalizeBooking(request)
             if (response.isSuccessful && response.body()?.success == true) {
                 AuthResult.Success(User(), null, "Booking finalized successfully")
             } else {
@@ -384,7 +386,7 @@ class AuthRepository(private val context: Context) {
                 return@withContext AuthResult.Failure("No internet connection")
             }
             
-            val response = apiService.getOperatorProfile()
+            val response = authenticatedApiService.getOperatorProfile()
             if (response.isSuccessful && response.body()?.success == true) {
                 val operatorData = response.body()!!.data ?: return@withContext AuthResult.Failure("No profile data")
                 AuthResult.Success(User(), null, "Profile loaded")
@@ -409,7 +411,7 @@ class AuthRepository(private val context: Context) {
                 stationId = stationId
             )
             
-            val response = apiService.updateOperatorProfile(request)
+            val response = authenticatedApiService.updateOperatorProfile(request)
             if (response.isSuccessful && response.body()?.success == true) {
                 AuthResult.Success(User(), null, "Profile updated successfully")
             } else {

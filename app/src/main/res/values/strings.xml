@@ -1,3 +1,18 @@
 <resources>
     <string name="app_name">EvChargingApp</string>
+    
+    <!-- Google Maps API Key - Replace with your actual key -->
+    <string name="google_maps_key">AIzaSyAYq27m2uvVwGQVhKNNSo-8Q6Iz5u1bsxo</string>
+    
+    <!-- Dashboard strings -->
+    <string name="pending_reservations">Pending Reservations</string>
+    <string name="approved_reservations">Approved Reservations</string>
+    <string name="nearby_stations">Nearby Charging Stations</string>
+    <string name="refresh">Refresh</string>
+    <string name="view_details">View Details</string>
+    <string name="book_now">Book Now</string>
+    <string name="available_slots">Available Slots</string>
+    <string name="total_slots">Total Slots</string>
+    <string name="station_type">Type</string>
+    <string name="distance">Distance</string>
 </resources>

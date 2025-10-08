@@ -10,7 +10,7 @@ import kotlinx.coroutines.withContext
 
 class OperatorRepository(private val context: Context) {
     
-    private val apiService = ApiConfig.retrofit.create(AuthApiService::class.java)
+    private val apiService = ApiConfig.getAuthenticatedRetrofit(context).create(AuthApiService::class.java)
     private val networkUtils = NetworkUtils(context)
     
     suspend fun getBookingDetails(qrCode: String): OperatorResult = withContext(Dispatchers.IO) {

@@ -1,5 +1,6 @@
 package com.example.evchargingapp.utils
 
+import android.content.Context
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -10,7 +11,7 @@ object ApiConfig {
     
     // TODO: Replace with your actual API base URL
     // Using localhost for development - update this when you have a live server
-    private const val BASE_URL = "http://10.0.2.2:5000/api/"  // Android emulator localhost
+    const val BASE_URL = "http://10.0.2.2:5000/api/"  // Android emulator localhost
     
     // For local testing with different IP configurations
     private const val LOCAL_BASE_URL = "http://192.168.1.100:3000/api/"
@@ -37,16 +38,28 @@ object ApiConfig {
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY
     }
-    
-    private val httpClient = OkHttpClient.Builder()
-        .addInterceptor(loggingInterceptor)
-        .connectTimeout(30, TimeUnit.SECONDS)
-        .readTimeout(30, TimeUnit.SECONDS)
-        .writeTimeout(30, TimeUnit.SECONDS)
-        .retryOnConnectionFailure(true)
-        .build()
-    
-    // Retrofit instance
+
+    // Create HTTP client with auth interceptor
+    private fun createHttpClient(context: Context? = null): OkHttpClient {
+        val builder = OkHttpClient.Builder()
+            .addInterceptor(loggingInterceptor)
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .writeTimeout(30, TimeUnit.SECONDS)
+            .retryOnConnectionFailure(true)
+        
+        // Add auth interceptor if context is provided
+        context?.let { 
+            builder.addInterceptor(AuthInterceptor(it))
+        }
+        
+        return builder.build()
+    }
+
+    // Default HTTP client (without auth interceptor)
+    private val httpClient = createHttpClient()
+
+    // Retrofit instance (will be updated to use authenticated client)
     val retrofit: Retrofit by lazy {
         Retrofit.Builder()
             .baseUrl(BASE_URL)
@@ -60,6 +73,16 @@ object ApiConfig {
         Retrofit.Builder()
             .baseUrl(LOCAL_BASE_URL)
             .client(httpClient)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+    }
+
+    // Create authenticated retrofit instance with context
+    fun getAuthenticatedRetrofit(context: Context): Retrofit {
+        val authenticatedClient = createHttpClient(context)
+        return Retrofit.Builder()
+            .baseUrl(if (Environment.USE_LOCALHOST) LOCAL_BASE_URL else BASE_URL)
+            .client(authenticatedClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
     }

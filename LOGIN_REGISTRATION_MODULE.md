@@ -102,11 +102,12 @@ POST /api/users/sync
 ### EV Owner Registration
 
 1. User fills registration form with validation
-2. System saves user locally first
-3. Attempts remote registration if network available
-4. Marks user as synced/unsynced accordingly
-5. Creates user session and redirects to dashboard
-6. Background sync occurs when network becomes available
+2. System checks for internet connection (required)
+3. If no internet, registration fails with error message
+4. Attempts remote registration via API
+5. If successful, creates user session with API data
+6. Redirects to dashboard without local database storage
+7. No local fallback - API-only registration
 
 ### Station Operator Registration
 
@@ -129,16 +130,21 @@ POST /api/users/sync
 
 ## Offline Support
 
-### Local-First Approach
+### Login Support
 
-- All user data stored locally for offline access
-- Local authentication when network unavailable
-- Background sync when network becomes available
+- Local authentication available when network unavailable
+- Background sync when network becomes available for existing users
+
+### Registration Limitations
+
+- **New registrations require internet connection**
+- No offline registration capability
+- Users must be online to create new accounts
 
 ### Sync Management
 
-- Tracks which users need server synchronization
-- Automatic sync on network reconnection
+- Tracks which existing users need server synchronization
+- Automatic sync on network reconnection for logged-in users
 - Status messages inform users about sync status
 
 ## Test Credentials

@@ -45,7 +45,7 @@ class MainActivity : AppCompatActivity() {
         
         // Load default fragment
         if (savedInstanceState == null) {
-            loadFragment(DashboardFragment())
+            loadFragment(EnhancedDashboardFragment.newInstance())
         }
     }
     
@@ -100,7 +100,7 @@ class MainActivity : AppCompatActivity() {
             
             when (item.itemId) {
                 R.id.nav_dashboard -> {
-                    loadFragmentWithAnimation(DashboardFragment(), animationType)
+                    loadFragmentWithAnimation(EnhancedDashboardFragment.newInstance(), animationType)
                     updateHeader(showWelcome = true, pageTitle = "")
                     true
                 }
@@ -215,7 +215,7 @@ class MainActivity : AppCompatActivity() {
         finish()
     }
     
-    // Method to be called from DashboardFragment for navigation
+    // Method to be called from EnhancedDashboardFragment for navigation
     fun navigateToBookings() {
         bottomNavigation.selectedItemId = R.id.nav_my_bookings
     }

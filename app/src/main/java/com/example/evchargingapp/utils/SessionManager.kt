@@ -23,7 +23,6 @@ class SessionManager(context: Context) {
         private const val KEY_LOGIN_TIME = "login_time"
         private const val KEY_SYNCED_WITH_SERVER = "synced_with_server"
         private const val KEY_TOKEN = "auth_token" // Store JWT token
-        
         // Deprecated - keeping for backward compatibility
         private const val KEY_NIC = "nic"
         private const val KEY_OPERATOR = "operator"

@@ -230,3 +230,60 @@ sealed class OperatorResult {
     data class Success(val message: String) : OperatorResult()
     data class Failure(val error: String) : OperatorResult()
 }
+
+// Charging Station Models
+data class ChargingStationDto(
+    @SerializedName("id")
+    val id: String? = null,
+    @SerializedName("name")
+    val name: String,
+    @SerializedName("location")
+    val location: String,
+    @SerializedName("type")
+    val type: String, // "AC" or "DC"
+    @SerializedName("totalSlots")
+    val totalSlots: Int,
+    @SerializedName("availableSlots")
+    val availableSlots: Int,
+    @SerializedName("schedule")
+    val schedule: List<SlotScheduleDto>? = null,
+    @SerializedName("isActive")
+    val isActive: Boolean,
+    @SerializedName("latitude")
+    val latitude: Double? = null,
+    @SerializedName("longitude")
+    val longitude: Double? = null,
+    @SerializedName("distance")
+    val distance: Double? = null // calculated distance from user location
+)
+
+data class SlotScheduleDto(
+    @SerializedName("slotNumber")
+    val slotNumber: Int,
+    @SerializedName("isAvailable")
+    val isAvailable: Boolean,
+    @SerializedName("startTime")
+    val startTime: String,
+    @SerializedName("endTime")
+    val endTime: String
+)
+
+// Nearby stations request
+data class NearbyStationsRequest(
+    @SerializedName("latitude")
+    val latitude: Double,
+    @SerializedName("longitude")
+    val longitude: Double,
+    @SerializedName("radius")
+    val radius: Double = 10.0 // Default 10km radius
+)
+
+// Dashboard stats response
+data class DashboardStats(
+    @SerializedName("pendingReservations")
+    val pendingReservations: Int,
+    @SerializedName("approvedReservations")
+    val approvedReservations: Int,
+    @SerializedName("pastReservations")
+    val pastReservations: Int
+)
