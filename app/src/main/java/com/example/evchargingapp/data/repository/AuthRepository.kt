@@ -31,34 +31,109 @@ class AuthRepository(private val context: Context) {
     }
     
     private suspend fun handleRemoteHybridLogin(identifier: String, password: String, userType: UserType): AuthResult {
+        Log.d("AuthRepository", "Attempting remote login for userType: $userType")
+        
         val response = when (userType) {
-            UserType.STATION_OPERATOR -> apiService.login(LoginRequest(identifier, password))
+            UserType.STATION_OPERATOR -> apiService.operatorLogin(OperatorLoginRequest(identifier, password))
             UserType.EV_OWNER -> apiService.loginWithNic(NicLoginRequest(identifier, password))
             else -> return AuthResult.Failure("Invalid user type")
         }
         
+        Log.d("AuthRepository", "Response code: ${response.code()}, isSuccessful: ${response.isSuccessful}")
+        Log.d("AuthRepository", "Response body success: ${response.body()?.success}")
+        
         if (response.isSuccessful && response.body()?.success == true) {
-            val loginData = response.body()!!.data ?: return handleLocalHybridLogin(identifier, password)
+            val responseBody = response.body()!!
+            Log.d("AuthRepository", "Processing successful response for $userType")
             
-            val user = User(
-                email = if (userType == UserType.EV_OWNER) identifier else loginData.user.email,
-                id = loginData.user.id,
-                name = "",
-                phone = "",
-                password = password,
-                role = UserRole.fromString(loginData.user.role),
-                isActive = true,
-                lastSyncTime = System.currentTimeMillis(),
-                syncedWithServer = true
-            )
+            val user = when (userType) {
+                UserType.STATION_OPERATOR -> {
+                    // Cast to operator login response
+                    val operatorData = responseBody.data as? OperatorLoginResponseData
+                    
+                    Log.d("AuthRepository", "operatorData: $operatorData")
+                    Log.d("AuthRepository", "user: ${operatorData?.user}")
+                    Log.d("AuthRepository", "token: ${operatorData?.token}")
+                    
+                    if (operatorData?.user != null) {
+                        val roleString = operatorData.user.role
+                        Log.d("AuthRepository", "Role from backend: $roleString")
+                        val mappedRole = UserRole.fromString(roleString)
+                        Log.d("AuthRepository", "Mapped role: $mappedRole")
+                        
+                        User(
+                            email = operatorData.user.email,
+                            id = operatorData.user.id,
+                            name = operatorData.user.email, // Using email as name since name isn't provided
+                            phone = "",
+                            password = password,
+                            role = mappedRole,
+                            isActive = true,
+                            lastSyncTime = System.currentTimeMillis(),
+                            syncedWithServer = true
+                        )
+                    } else {
+                        Log.d("AuthRepository", "operatorData or user is null, falling back to local login")
+                        return handleLocalHybridLogin(identifier, password)
+                    }
+                }
+                UserType.EV_OWNER -> {
+                    val loginData = responseBody.data as? LoginResponseData
+                    
+                    if (loginData != null) {
+                        val firstName = loginData.user.firstName ?: ""
+                        val lastName = loginData.user.lastName ?: ""
+                        val fullName = "$firstName $lastName".trim()
+                        
+                        Log.d("AuthRepository", "Creating EV_OWNER user - firstName: $firstName, lastName: $lastName, fullName: $fullName")
+                        
+                        User(
+                            email = identifier,
+                            id = loginData.user.id,
+                            name = fullName,
+                            phone = "",
+                            password = password,
+                            role = UserRole.fromString(loginData.user.role),
+                            isActive = true,
+                            lastSyncTime = System.currentTimeMillis(),
+                            syncedWithServer = true
+                        )
+                    } else {
+                        return handleLocalHybridLogin(identifier, password)
+                    }
+                }
+                else -> return AuthResult.Failure("Invalid user type")
+            }
             
-            saveOrUpdateUser(user)
-            return AuthResult.Success(user, loginData.token)
+            val token = when (userType) {
+                UserType.STATION_OPERATOR -> {
+                    val operatorData = responseBody.data as? OperatorLoginResponseData
+                    operatorData?.token
+                }
+                UserType.EV_OWNER -> {
+                    val loginData = responseBody.data as? LoginResponseData
+                    loginData?.token
+                }
+                else -> null
+            }
+            
+            // Merge with local data
+            val existingUser = dbHelper.getUserByEmail(user.email)
+            val finalUser = existingUser?.let {
+                user.copy(name = if (it.name.isNotEmpty()) it.name else user.name, phone = it.phone)
+            } ?: user
+            
+            Log.d("AuthRepository", "Final user created: ${finalUser.name}, email: ${finalUser.email}, role: ${finalUser.role}")
+            
+            saveOrUpdateUser(finalUser)
+            return AuthResult.Success(finalUser, token)
         }
         
+        Log.d("AuthRepository", "Login failed - Response code: ${response.code()}")
         return if (response.code() == 401) {
             AuthResult.Failure("Invalid credentials")
         } else {
+            Log.d("AuthRepository", "Falling back to local login due to non-401 error")
             handleLocalHybridLogin(identifier, password)
         }
     }
@@ -231,6 +306,119 @@ class AuthRepository(private val context: Context) {
     
     private fun generateUserId(): String {
         return "user_${System.currentTimeMillis()}_${(0..9999).random()}"
+    }
+    
+    // Operator specific methods
+    suspend fun getBookingDetails(qrCode: String): AuthResult = withContext(Dispatchers.IO) {
+        return@withContext try {
+            if (!networkUtils.isNetworkAvailable()) {
+                return@withContext AuthResult.Failure("No internet connection")
+            }
+            
+            val response = apiService.getBookingByQr(qrCode)
+            if (response.isSuccessful && response.body()?.success == true) {
+                val bookingData = response.body()!!.data ?: return@withContext AuthResult.Failure("No booking found")
+                AuthResult.Success(User(), null, "Booking found") // Using User for generic response, data would be in custom result
+            } else {
+                AuthResult.Failure("Booking not found or invalid QR code")
+            }
+        } catch (e: Exception) {
+            Log.e("AuthRepository", "Booking lookup error", e)
+            AuthResult.Failure("Failed to lookup booking: ${e.message}")
+        }
+    }
+    
+    suspend fun confirmBooking(bookingId: String, operatorId: String): AuthResult = withContext(Dispatchers.IO) {
+        return@withContext try {
+            if (!networkUtils.isNetworkAvailable()) {
+                return@withContext AuthResult.Failure("No internet connection")
+            }
+            
+            val request = OperatorConfirmRequest(
+                bookingId = bookingId,
+                operatorId = operatorId,
+                startTime = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.getDefault()).format(java.util.Date())
+            )
+            
+            val response = apiService.confirmBooking(request)
+            if (response.isSuccessful && response.body()?.success == true) {
+                AuthResult.Success(User(), null, "Booking confirmed successfully")
+            } else {
+                AuthResult.Failure("Failed to confirm booking")
+            }
+        } catch (e: Exception) {
+            Log.e("AuthRepository", "Booking confirmation error", e)
+            AuthResult.Failure("Failed to confirm booking: ${e.message}")
+        }
+    }
+    
+    suspend fun finalizeBooking(bookingId: String, operatorId: String, energyConsumed: Double?, totalCost: Double?): AuthResult = withContext(Dispatchers.IO) {
+        return@withContext try {
+            if (!networkUtils.isNetworkAvailable()) {
+                return@withContext AuthResult.Failure("No internet connection")
+            }
+            
+            val request = OperatorFinalizeRequest(
+                bookingId = bookingId,
+                operatorId = operatorId,
+                endTime = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.getDefault()).format(java.util.Date()),
+                energyConsumed = energyConsumed,
+                totalCost = totalCost
+            )
+            
+            val response = apiService.finalizeBooking(request)
+            if (response.isSuccessful && response.body()?.success == true) {
+                AuthResult.Success(User(), null, "Booking finalized successfully")
+            } else {
+                AuthResult.Failure("Failed to finalize booking")
+            }
+        } catch (e: Exception) {
+            Log.e("AuthRepository", "Booking finalization error", e)
+            AuthResult.Failure("Failed to finalize booking: ${e.message}")
+        }
+    }
+    
+    suspend fun getOperatorProfile(): AuthResult = withContext(Dispatchers.IO) {
+        return@withContext try {
+            if (!networkUtils.isNetworkAvailable()) {
+                return@withContext AuthResult.Failure("No internet connection")
+            }
+            
+            val response = apiService.getOperatorProfile()
+            if (response.isSuccessful && response.body()?.success == true) {
+                val operatorData = response.body()!!.data ?: return@withContext AuthResult.Failure("No profile data")
+                AuthResult.Success(User(), null, "Profile loaded")
+            } else {
+                AuthResult.Failure("Failed to load profile")
+            }
+        } catch (e: Exception) {
+            Log.e("AuthRepository", "Profile load error", e)
+            AuthResult.Failure("Failed to load profile: ${e.message}")
+        }
+    }
+    
+    suspend fun updateOperatorProfile(name: String?, phone: String?, stationId: String?): AuthResult = withContext(Dispatchers.IO) {
+        return@withContext try {
+            if (!networkUtils.isNetworkAvailable()) {
+                return@withContext AuthResult.Failure("No internet connection")
+            }
+            
+            val request = OperatorProfileUpdateRequest(
+                name = name,
+                phone = phone,
+                stationId = stationId
+            )
+            
+            val response = apiService.updateOperatorProfile(request)
+            if (response.isSuccessful && response.body()?.success == true) {
+                AuthResult.Success(User(), null, "Profile updated successfully")
+            } else {
+                AuthResult.Failure("Failed to update profile")
+            }
+        } catch (e: Exception) {
+            Log.e("AuthRepository", "Profile update error", e)
+            AuthResult.Failure("Failed to update profile: ${e.message}")
+        }
     }
 }
 

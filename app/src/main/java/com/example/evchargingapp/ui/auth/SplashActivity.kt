@@ -17,9 +17,15 @@ class SplashActivity : AppCompatActivity() {
         
         val sessionManager = SessionManager(this)
         
-        // If already logged in, go directly to main activity
+        // If already logged in, go directly to appropriate activity
         if (sessionManager.isLoggedIn()) {
-            startActivity(Intent(this, MainActivity::class.java))
+            val user = sessionManager.getCurrentUser()
+            val intent = if (user?.isStationOperator() == true) {
+                Intent(this, com.example.evchargingapp.ui.operator.OperatorDashboardActivity::class.java)
+            } else {
+                Intent(this, MainActivity::class.java)
+            }
+            startActivity(intent)
             finish()
             return
         }

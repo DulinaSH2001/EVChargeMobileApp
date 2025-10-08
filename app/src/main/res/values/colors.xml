@@ -52,4 +52,10 @@
     <color name="divider_glass">@color/divider_gray</color>
     <color name="gradient_start">@color/primary_blue</color>
     <color name="gradient_end">@color/primary_blue_light</color>
+    
+    <!-- Additional Color Aliases -->
+    <color name="primary_color">@color/primary_blue</color>
+    <color name="success_color">@color/success_green</color>
+    <color name="error_color">@color/error_red</color>
+    <color name="warning_color">@color/warning_orange</color>
 </resources>

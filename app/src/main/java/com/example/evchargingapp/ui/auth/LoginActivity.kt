@@ -92,20 +92,27 @@ class LoginActivity : AppCompatActivity() {
     private fun updateUIForUserType() {
         val isEvOwner = currentUserType == UserType.EV_OWNER
         
-        // Update button styles
-        btnEvOwner.backgroundTintList = resources.getColorStateList(
-            if (isEvOwner) R.color.primary_blue else android.R.color.transparent, null
-        )
-        btnEvOwner.setTextColor(resources.getColor(
-            if (isEvOwner) R.color.text_white else R.color.text_secondary, null
-        ))
+        // Update button styles for EV Owner
+        if (isEvOwner) {
+            btnEvOwner.backgroundTintList = resources.getColorStateList(R.color.primary_blue, null)
+            btnEvOwner.setTextColor(resources.getColor(R.color.text_white, null))
+            btnEvOwner.strokeColor = resources.getColorStateList(R.color.primary_blue, null)
+        } else {
+            btnEvOwner.backgroundTintList = resources.getColorStateList(android.R.color.transparent, null)
+            btnEvOwner.setTextColor(resources.getColor(R.color.text_secondary, null))
+            btnEvOwner.strokeColor = resources.getColorStateList(R.color.border_light, null)
+        }
         
-        btnStationOperator.backgroundTintList = resources.getColorStateList(
-            if (!isEvOwner) R.color.primary_blue else android.R.color.transparent, null
-        )
-        btnStationOperator.setTextColor(resources.getColor(
-            if (!isEvOwner) R.color.text_white else R.color.text_secondary, null
-        ))
+        // Update button styles for Station Operator
+        if (!isEvOwner) {
+            btnStationOperator.backgroundTintList = resources.getColorStateList(R.color.primary_blue, null)
+            btnStationOperator.setTextColor(resources.getColor(R.color.text_white, null))
+            btnStationOperator.strokeColor = resources.getColorStateList(R.color.primary_blue, null)
+        } else {
+            btnStationOperator.backgroundTintList = resources.getColorStateList(android.R.color.transparent, null)
+            btnStationOperator.setTextColor(resources.getColor(R.color.text_secondary, null))
+            btnStationOperator.strokeColor = resources.getColorStateList(R.color.border_light, null)
+        }
         
         // Update input field
         inputLayoutIdentifier.hint = if (isEvOwner) "NIC" else "Email"
@@ -188,8 +195,13 @@ class LoginActivity : AppCompatActivity() {
             Toast.makeText(this, it, Toast.LENGTH_SHORT).show()
         }
         
-        // Navigate to main activity
-        val intent = Intent(this, MainActivity::class.java)
+        // Navigate based on user role
+        val intent = if (user.isStationOperator()) {
+            Intent(this, com.example.evchargingapp.ui.operator.OperatorDashboardActivity::class.java)
+        } else {
+            Intent(this, MainActivity::class.java)
+        }
+        
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
         finish()

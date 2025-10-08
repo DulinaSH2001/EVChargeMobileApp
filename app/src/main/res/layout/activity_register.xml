@@ -386,7 +386,7 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center"
-            android:layout_marginBottom="24dp">
+            android:layout_marginBottom="32dp">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -409,97 +409,6 @@
                 android:focusable="true"
                 android:background="?android:attr/selectableItemBackground"
                 android:padding="8dp" />
-
-        </LinearLayout>
-
-        <!-- Or connect with section -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Or connect with"
-            android:textSize="14sp"
-            android:textColor="@color/text_secondary"
-            android:fontFamily="sans-serif"
-            android:layout_marginBottom="16dp" />
-
-        <!-- Social Media Buttons -->
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center"
-            android:layout_marginBottom="32dp">
-
-            <!-- Facebook Button -->
-            <androidx.cardview.widget.CardView
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                app:cardCornerRadius="24dp"
-                app:cardElevation="2dp"
-                app:cardBackgroundColor="@color/facebook_blue"
-                android:layout_marginEnd="12dp"
-                android:clickable="true"
-                android:focusable="true"
-                android:foreground="?android:attr/selectableItemBackground">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:text="f"
-                    android:textColor="@color/text_white"
-                    android:textSize="24sp"
-                    android:textStyle="bold"
-                    android:gravity="center"
-                    android:fontFamily="sans-serif" />
-
-            </androidx.cardview.widget.CardView>
-
-            <!-- Twitter Button -->
-            <androidx.cardview.widget.CardView
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                app:cardCornerRadius="24dp"
-                app:cardElevation="2dp"
-                app:cardBackgroundColor="@color/twitter_blue"
-                android:layout_marginEnd="12dp"
-                android:clickable="true"
-                android:focusable="true"
-                android:foreground="?android:attr/selectableItemBackground">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:text="t"
-                    android:textColor="@color/text_white"
-                    android:textSize="20sp"
-                    android:textStyle="bold"
-                    android:gravity="center"
-                    android:fontFamily="sans-serif" />
-
-            </androidx.cardview.widget.CardView>
-
-            <!-- Google Button -->
-            <androidx.cardview.widget.CardView
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                app:cardCornerRadius="24dp"
-                app:cardElevation="2dp"
-                app:cardBackgroundColor="@color/google_blue"
-                android:clickable="true"
-                android:focusable="true"
-                android:foreground="?android:attr/selectableItemBackground">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:text="G"
-                    android:textColor="@color/text_white"
-                    android:textSize="20sp"
-                    android:textStyle="bold"
-                    android:gravity="center"
-                    android:fontFamily="sans-serif" />
-
-            </androidx.cardview.widget.CardView>
 
         </LinearLayout>
 

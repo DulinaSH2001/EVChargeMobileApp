@@ -43,6 +43,10 @@ data class ApiUser(
     val id: String,
     @SerializedName("email")
     val email: String,
+    @SerializedName("firstName")
+    val firstName: String? = null,
+    @SerializedName("lastName")
+    val lastName: String? = null,
     @SerializedName("role")
     val role: String
 )
@@ -110,13 +114,119 @@ data class VerifyTokenResponseData(
 
 // User roles enum
 enum class UserRole(val value: String) {
-    EV_OWNER("EV_OWNER"),
-    STATION_OPERATOR("STATION_OPERATOR"),
-    ADMIN("ADMIN");
+    EV_OWNER("EVOwner"),
+    STATION_OPERATOR("StationOperator"),
+    ADMIN("Backoffice");
     
     companion object {
         fun fromString(value: String): UserRole {
             return values().find { it.value == value } ?: EV_OWNER
         }
     }
+}
+
+// Operator specific models
+data class OperatorLoginRequest(
+    @SerializedName("email")
+    val email: String,
+    @SerializedName("password")
+    val password: String
+)
+
+data class OperatorUser(
+    @SerializedName("id")
+    val id: String,
+    @SerializedName("email")
+    val email: String,
+    @SerializedName("name")
+    val name: String? = null,
+    @SerializedName("stationId")
+    val stationId: String? = null,
+    @SerializedName("role")
+    val role: String
+)
+
+data class OperatorLoginResponseData(
+    @SerializedName("token")
+    val token: String,
+    @SerializedName("user")
+    val user: OperatorUser
+)
+
+// Booking related models for operator operations
+data class BookingDetails(
+    @SerializedName("id")
+    val id: String,
+    @SerializedName("evOwnerId")
+    val evOwnerId: String,
+    @SerializedName("evOwnerName")
+    val evOwnerName: String,
+    @SerializedName("stationId")
+    val stationId: String,
+    @SerializedName("chargingSlotId")
+    val chargingSlotId: String,
+    @SerializedName("bookingDate")
+    val bookingDate: String,
+    @SerializedName("startTime")
+    val startTime: String,
+    @SerializedName("endTime")
+    val endTime: String,
+    @SerializedName("status")
+    val status: String,
+    @SerializedName("qrCode")
+    val qrCode: String? = null,
+    @SerializedName("vehicleNumber")
+    val vehicleNumber: String? = null,
+    @SerializedName("contactNumber")
+    val contactNumber: String? = null
+) : java.io.Serializable
+
+data class OperatorConfirmRequest(
+    @SerializedName("bookingId")
+    val bookingId: String,
+    @SerializedName("operatorId")
+    val operatorId: String,
+    @SerializedName("startTime")
+    val startTime: String? = null
+)
+
+data class OperatorFinalizeRequest(
+    @SerializedName("bookingId")
+    val bookingId: String,
+    @SerializedName("operatorId")
+    val operatorId: String,
+    @SerializedName("endTime")
+    val endTime: String,
+    @SerializedName("energyConsumed")
+    val energyConsumed: Double? = null,
+    @SerializedName("totalCost")
+    val totalCost: Double? = null
+)
+
+data class OperatorSessionResponse(
+    @SerializedName("sessionId")
+    val sessionId: String,
+    @SerializedName("status")
+    val status: String,
+    @SerializedName("message")
+    val message: String
+)
+
+// Operator profile update request
+data class OperatorProfileUpdateRequest(
+    @SerializedName("name")
+    val name: String? = null,
+    @SerializedName("phone")
+    val phone: String? = null,
+    @SerializedName("stationId")
+    val stationId: String? = null
+)
+
+// Result classes for operator operations
+sealed class OperatorResult {
+    data class BookingFound(val booking: BookingDetails) : OperatorResult()
+    data class SessionResult(val response: OperatorSessionResponse) : OperatorResult()
+    data class ProfileResult(val profile: OperatorUser) : OperatorResult()
+    data class Success(val message: String) : OperatorResult()
+    data class Failure(val error: String) : OperatorResult()
 }

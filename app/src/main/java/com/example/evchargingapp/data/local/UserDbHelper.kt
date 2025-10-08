@@ -176,7 +176,7 @@ class UserDbHelper(context: Context) : SQLiteOpenHelper(context, DB_NAME, null, 
                     name = c.getString(c.getColumnIndexOrThrow(COL_NAME)) ?: "",
                     phone = c.getString(c.getColumnIndexOrThrow(COL_PHONE)) ?: "",
                     password = c.getString(c.getColumnIndexOrThrow(COL_PASSWORD)) ?: "",
-                    role = UserRole.fromString(c.getString(c.getColumnIndexOrThrow(COL_ROLE)) ?: "EV_OWNER"),
+                    role = UserRole.fromString(c.getString(c.getColumnIndexOrThrow(COL_ROLE)) ?: "EVOwner"),
                     isActive = c.getInt(c.getColumnIndexOrThrow(COL_IS_ACTIVE)) == 1,
                     lastSyncTime = c.getLong(c.getColumnIndexOrThrow(COL_LAST_SYNC_TIME)),
                     syncedWithServer = c.getInt(c.getColumnIndexOrThrow(COL_SYNCED_WITH_SERVER)) == 1,
@@ -211,7 +211,7 @@ class UserDbHelper(context: Context) : SQLiteOpenHelper(context, DB_NAME, null, 
             arrayOf(role.value),
             null,
             null,
-            COL_NAME
+            null
         )
         
         val users = mutableListOf<User>()
@@ -223,7 +223,7 @@ class UserDbHelper(context: Context) : SQLiteOpenHelper(context, DB_NAME, null, 
                     name = c.getString(c.getColumnIndexOrThrow(COL_NAME)) ?: "",
                     phone = c.getString(c.getColumnIndexOrThrow(COL_PHONE)) ?: "",
                     password = c.getString(c.getColumnIndexOrThrow(COL_PASSWORD)) ?: "",
-                    role = UserRole.fromString(c.getString(c.getColumnIndexOrThrow(COL_ROLE)) ?: "EV_OWNER"),
+                    role = UserRole.fromString(c.getString(c.getColumnIndexOrThrow(COL_ROLE)) ?: "EVOwner"),
                     isActive = c.getInt(c.getColumnIndexOrThrow(COL_IS_ACTIVE)) == 1,
                     lastSyncTime = c.getLong(c.getColumnIndexOrThrow(COL_LAST_SYNC_TIME)),
                     syncedWithServer = c.getInt(c.getColumnIndexOrThrow(COL_SYNCED_WITH_SERVER)) == 1
@@ -280,7 +280,7 @@ class UserDbHelper(context: Context) : SQLiteOpenHelper(context, DB_NAME, null, 
                     name = c.getString(c.getColumnIndexOrThrow(COL_NAME)) ?: "",
                     phone = c.getString(c.getColumnIndexOrThrow(COL_PHONE)) ?: "",
                     password = c.getString(c.getColumnIndexOrThrow(COL_PASSWORD)) ?: "",
-                    role = UserRole.fromString(c.getString(c.getColumnIndexOrThrow(COL_ROLE)) ?: "EV_OWNER"),
+                    role = UserRole.fromString(c.getString(c.getColumnIndexOrThrow(COL_ROLE)) ?: "EVOwner"),
                     isActive = c.getInt(c.getColumnIndexOrThrow(COL_IS_ACTIVE)) == 1,
                     lastSyncTime = c.getLong(c.getColumnIndexOrThrow(COL_LAST_SYNC_TIME)),
                     syncedWithServer = c.getInt(c.getColumnIndexOrThrow(COL_SYNCED_WITH_SERVER)) == 1

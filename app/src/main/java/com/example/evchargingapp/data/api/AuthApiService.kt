@@ -8,7 +8,7 @@ interface AuthApiService {
     @POST("auth/login")
     suspend fun login(@Body request: LoginRequest): Response<ApiResponse<LoginResponseData>>
     
-    @POST("auth/login")
+    @POST("auth/evowner/login")
     suspend fun loginWithNic(@Body request: NicLoginRequest): Response<ApiResponse<LoginResponseData>>
     
     @POST("auth/logout")
@@ -22,4 +22,23 @@ interface AuthApiService {
     
     @POST("EVOwner")
     suspend fun registerEvOwner(@Body request: EvOwnerRegisterRequest): Response<ApiResponse<EvOwnerRegisterResponseData>>
+    
+    // Operator specific endpoints
+    @POST("auth/login")
+    suspend fun operatorLogin(@Body request: OperatorLoginRequest): Response<ApiResponse<OperatorLoginResponseData>>
+    
+    @POST("operator/confirm")
+    suspend fun confirmBooking(@Body request: OperatorConfirmRequest): Response<ApiResponse<OperatorSessionResponse>>
+    
+    @POST("operator/finalize")
+    suspend fun finalizeBooking(@Body request: OperatorFinalizeRequest): Response<ApiResponse<OperatorSessionResponse>>
+    
+    @GET("operator/booking/{qrCode}")
+    suspend fun getBookingByQr(@Path("qrCode") qrCode: String): Response<ApiResponse<BookingDetails>>
+    
+    @GET("operator/profile")
+    suspend fun getOperatorProfile(): Response<ApiResponse<OperatorUser>>
+    
+    @PUT("operator/profile")
+    suspend fun updateOperatorProfile(@Body request: OperatorProfileUpdateRequest): Response<ApiResponse<OperatorUser>>
 }
