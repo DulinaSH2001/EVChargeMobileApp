@@ -50,7 +50,32 @@ class SessionManager(context: Context) {
             token?.let { putString(KEY_TOKEN, it) }
             // Handle backward compatibility
             putBoolean(KEY_OPERATOR, user.isStationOperator())
-            putString(KEY_NIC, user.email) // For backward compatibility
+            putString(KEY_NIC, user.email) // For backward compatibility - will be overridden for EV Owners
+            apply()
+        }
+    }
+    
+    // Overloaded method for EV Owner login with actual NIC
+    fun saveLogin(user: User, token: String? = null, actualNic: String? = null) {
+        editor.apply {
+            putBoolean(KEY_LOGGED_IN, true)
+            putString(KEY_EMAIL, user.email)
+            putString(KEY_ID, user.id)
+            putString(KEY_NAME, user.name)
+            putString(KEY_PHONE, user.phone)
+            putString(KEY_ROLE, user.role.value)
+            putBoolean(KEY_IS_ACTIVE, user.isActive)
+            putLong(KEY_LOGIN_TIME, System.currentTimeMillis())
+            putBoolean(KEY_SYNCED_WITH_SERVER, user.syncedWithServer)
+            token?.let { putString(KEY_TOKEN, it) }
+            // Handle backward compatibility
+            putBoolean(KEY_OPERATOR, user.isStationOperator())
+            // Store actual NIC if provided, otherwise use email for backward compatibility
+            putString(KEY_NIC, actualNic ?: user.email)
+            
+            // Debug logging for name
+            android.util.Log.d("SessionManager", "Saving login - user.name: '${user.name}', email: '${user.email}'")
+            
             apply()
         }
     }
@@ -105,10 +130,47 @@ class SessionManager(context: Context) {
     @Deprecated("Use getEmail instead")
     fun getNic(): String? = getEmail()
     
-    // Get actual NIC number for API calls
-    fun getActualNic(): String? = prefs.getString(KEY_NIC, null)
+    // Get the actual NIC (not email) for EV Owners
+    fun getActualNic(): String? {
+        // For EV Owners, the NIC field should now contain the actual NIC (fixed)
+        return prefs.getString(KEY_NIC, null)
+    }
     
-    fun getUserName(): String = prefs.getString(KEY_NAME, "User") ?: "User"
+    fun getUserName(): String {
+        // For EV Owners, prioritize the profile-based name over basic login name
+        if (isEvOwner()) {
+            val firstName = prefs.getString(KEY_FIRST_NAME, "")
+            val lastName = prefs.getString(KEY_LAST_NAME, "")
+            
+            val constructedName = when {
+                !firstName.isNullOrEmpty() && !lastName.isNullOrEmpty() -> "$firstName $lastName"
+                !firstName.isNullOrEmpty() -> firstName
+                !lastName.isNullOrEmpty() -> lastName
+                else -> null
+            }
+            
+            if (!constructedName.isNullOrEmpty()) {
+                android.util.Log.d("SessionManager", "Using EV Owner profile name: '$constructedName'")
+                return constructedName.trim()
+            }
+        }
+        
+        // Fallback to stored login name
+        val name = prefs.getString(KEY_NAME, null)
+        
+        // Debug logging
+        android.util.Log.d("SessionManager", "getUserName - stored name: '$name'")
+        
+        // Use the stored name from login if it's meaningful
+        if (!name.isNullOrEmpty() && name.trim() != "User" && name.trim().isNotEmpty()) {
+            android.util.Log.d("SessionManager", "Using stored login name: '$name'")
+            return name.trim()
+        }
+        
+        // Final fallback
+        android.util.Log.d("SessionManager", "Using fallback: 'User'")
+        return "User"
+    }
     
     fun getUserEmail(): String = prefs.getString(KEY_EMAIL, "user@example.com") ?: "user@example.com"
     
@@ -204,6 +266,9 @@ class SessionManager(context: Context) {
             putString(KEY_NIC, evOwner.nic)
             apply()
         }
+        
+        // Log the profile save for debugging
+        android.util.Log.d("SessionManager", "EV Owner profile saved - name: '${evOwner.firstName} ${evOwner.lastName}'")
     }
     
     fun getEVOwnerProfile(): EVOwnerDto? {

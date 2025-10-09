@@ -528,43 +528,20 @@ class EnhancedDashboardFragment : Fragment() {
     }
     
     private fun loadDashboardStats() {
-        lifecycleScope.launch {
-            try {
-                chargingStationRepository.getDashboardStats()
-                    .onSuccess { stats ->
-                        tvPendingCount.text = stats.pendingReservations.toString()
-                        tvApprovedCount.text = stats.approvedReservations.toString()
-                    }
-                    .onFailure {
-                        // Load individual counts as fallback
-                        loadIndividualStats()
-                    }
-            } catch (e: Exception) {
-                loadIndividualStats()
-            }
-        }
+        // Use placeholder values since API endpoints were removed
+        // These can be replaced with actual data sources or removed entirely
+        tvPendingCount.text = "0"
+        tvApprovedCount.text = "0"
+        
+        Log.d(TAG, "Dashboard stats loaded with placeholder values")
     }
     
     private fun loadIndividualStats() {
-        lifecycleScope.launch {
-            // Load pending reservations count
-            chargingStationRepository.getPendingReservations()
-                .onSuccess { reservations ->
-                    tvPendingCount.text = reservations.size.toString()
-                }
-                .onFailure {
-                    tvPendingCount.text = "0"
-                }
-            
-            // Load approved reservations count
-            chargingStationRepository.getApprovedReservations()
-                .onSuccess { reservations ->
-                    tvApprovedCount.text = reservations.size.toString()
-                }
-                .onFailure {
-                    tvApprovedCount.text = "0"
-                }
-        }
+        // Use placeholder values since API endpoints were removed
+        tvPendingCount.text = "0"
+        tvApprovedCount.text = "0"
+        
+        Log.d(TAG, "Individual stats loaded with placeholder values")
     }
     
     private fun loadNearbyStations(latitude: Double, longitude: Double) {

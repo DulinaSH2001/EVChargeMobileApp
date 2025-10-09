@@ -58,8 +58,11 @@ class ProfileFragment : Fragment() {
     }
     
     private fun setupUserInfo() {
-        tvUserName.text = sessionManager.getUserName()
-        tvUserEmail.text = sessionManager.getUserEmail()
+        val userName = sessionManager.getUserName()
+        val userEmail = sessionManager.getUserEmail()
+        
+        tvUserName.text = userName
+        tvUserEmail.text = userEmail
         
         // Set up dark theme switch state based on saved preference
         val isDarkThemeEnabled = sessionManager.isDarkThemeEnabled()
@@ -118,6 +121,12 @@ class ProfileFragment : Fragment() {
     
     private fun showToast(message: String) {
         android.widget.Toast.makeText(context, message, android.widget.Toast.LENGTH_SHORT).show()
+    }
+    
+    override fun onResume() {
+        super.onResume()
+        // Refresh user info when fragment becomes visible to ensure latest data is displayed
+        setupUserInfo()
     }
     
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

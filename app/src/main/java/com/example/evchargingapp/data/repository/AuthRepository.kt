@@ -86,12 +86,16 @@ class AuthRepository(private val context: Context) {
                         val lastName = loginData.user.lastName ?: ""
                         val fullName = "$firstName $lastName".trim()
                         
-                        Log.d("AuthRepository", "Creating EV_OWNER user - firstName: $firstName, lastName: $lastName, fullName: $fullName")
+                        Log.d("AuthRepository", "Login API response - firstName: '$firstName', lastName: '$lastName', fullName: '$fullName'")
+                        
+                        // For EV Owners, the complete profile will be fetched immediately after login
+                        // So we just provide a basic user object here
+                        val displayName = if (fullName.isNotEmpty()) fullName else ""
                         
                         User(
                             email = identifier,
                             id = loginData.user.id,
-                            name = fullName,
+                            name = displayName,
                             phone = "",
                             password = password,
                             role = UserRole.fromString(loginData.user.role),

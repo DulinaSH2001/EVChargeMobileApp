@@ -19,13 +19,4 @@ interface ChargingStationApiService {
     
     @GET("ChargingStation")
     suspend fun getAllStations(): Response<ApiResponse<List<ChargingStationDto>>>
-    
-    @GET("api/reservations/pending")
-    suspend fun getPendingReservations(): Response<ApiResponse<List<BookingDetails>>>
-    
-    @GET("api/reservations/approved")
-    suspend fun getApprovedReservations(): Response<ApiResponse<List<BookingDetails>>>
-    
-    @GET("api/dashboard/stats")
-    suspend fun getDashboardStats(): Response<ApiResponse<DashboardStats>>
 }

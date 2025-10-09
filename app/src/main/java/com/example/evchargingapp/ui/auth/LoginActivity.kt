@@ -329,26 +329,79 @@ class LoginActivity : AppCompatActivity() {
             return
         }
         
-        // Save session with token
-        sessionManager.saveLogin(user, token)
-        
+        // For EV Owners, immediately fetch and save complete profile before proceeding
+        if (!user.isStationOperator()) {
+            fetchAndSaveEVOwnerProfile(user, token, message)
+        } else {
+            // For Station Operators, save session and proceed
+            sessionManager.saveLogin(user, token)
+            
+            // Show success message if any
+            message?.let {
+                Toast.makeText(this, it, Toast.LENGTH_SHORT).show()
+            }
+            
+            // Navigate to operator dashboard
+            val intent = Intent(this, com.example.evchargingapp.ui.operator.OperatorDashboardActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            startActivity(intent)
+            finish()
+        }
+    }
+    
+    private fun fetchAndSaveEVOwnerProfile(user: User, token: String?, message: String?) {
+        lifecycleScope.launch {
+            try {
+                val nic = evOwnerValidatedNic
+                if (nic == null) {
+                    Log.w("LoginActivity", "No validated NIC available for profile fetch")
+                    // Fallback to basic login
+                    completeLoginProcess(user, token, message)
+                    return@launch
+                }
+                
+                Log.d("LoginActivity", "Fetching EV Owner profile for NIC: $nic")
+                val result = evOwnerRepository.getEVOwnerByNIC(nic)
+                
+                result.onSuccess { evOwner ->
+                    Log.d("LoginActivity", "Successfully fetched EV Owner profile: ${evOwner.firstName} ${evOwner.lastName}")
+                    
+                    // Save session with the actual NIC and complete profile
+                    sessionManager.saveLogin(user, token, nic)
+                    sessionManager.saveEVOwnerProfile(evOwner)
+                    
+                    // Complete login process first (navigate to MainActivity)
+                    completeLoginProcess(user, token, message)
+                    
+                    // Notify MainActivity to refresh name after a short delay
+                    android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                        MainActivity.refreshUserNameIfActive()
+                        Log.d("LoginActivity", "User name refresh triggered")
+                    }, 500) // 500ms delay
+                    
+                }.onFailure { exception ->
+                    Log.w("LoginActivity", "Failed to fetch EV Owner profile: ${exception.message}")
+                    // Save basic session and proceed (profile can be fetched later)
+                    sessionManager.saveLogin(user, token, nic)
+                    completeLoginProcess(user, token, message)
+                }
+            } catch (e: Exception) {
+                Log.e("LoginActivity", "Error fetching EV Owner profile: ${e.message}")
+                // Save basic session and proceed
+                sessionManager.saveLogin(user, token, evOwnerValidatedNic)
+                completeLoginProcess(user, token, message)
+            }
+        }
+    }
+    
+    private fun completeLoginProcess(user: User, token: String?, message: String?) {
         // Show success message if any
         message?.let {
             Toast.makeText(this, it, Toast.LENGTH_SHORT).show()
         }
         
-        // Fetch and save EV Owner profile if user is an EV Owner
-        if (!user.isStationOperator()) {
-            fetchEVOwnerProfile(user)
-        }
-        
-        // Navigate based on user role
-        val intent = if (user.isStationOperator()) {
-            Intent(this, com.example.evchargingapp.ui.operator.OperatorDashboardActivity::class.java)
-        } else {
-            Intent(this, MainActivity::class.java)
-        }
-        
+        // Navigate to main dashboard
+        val intent = Intent(this, MainActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
         finish()
@@ -360,33 +413,6 @@ class LoginActivity : AppCompatActivity() {
         
         // Clear password field on failure
         passwordInput.text.clear()
-    }
-    
-    private fun fetchEVOwnerProfile(user: User) {
-        lifecycleScope.launch {
-            try {
-                // Use the original NIC that was entered during validation
-                val nic = evOwnerValidatedNic
-                if (nic == null) {
-                    Log.w("LoginActivity", "No validated NIC available for profile fetch")
-                    return@launch
-                }
-                
-                Log.d("LoginActivity", "Fetching EV Owner profile for NIC: $nic")
-                val result = evOwnerRepository.getEVOwnerByNIC(nic)
-                
-                result.onSuccess { evOwner ->
-                    Log.d("LoginActivity", "Successfully fetched EV Owner profile: ${evOwner.firstName} ${evOwner.lastName}")
-                    sessionManager.saveEVOwnerProfile(evOwner)
-                }.onFailure { exception ->
-                    Log.w("LoginActivity", "Failed to fetch EV Owner profile: ${exception.message}")
-                    // Don't show error to user as this is not critical for login flow
-                    // Profile can be fetched later from profile fragment
-                }
-            } catch (e: Exception) {
-                Log.e("LoginActivity", "Error fetching EV Owner profile: ${e.message}")
-            }
-        }
     }
     
     private fun setLoadingState(isLoading: Boolean) {

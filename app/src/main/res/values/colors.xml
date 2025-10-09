@@ -28,6 +28,7 @@
     
     <!-- Border and Divider Colors -->
     <color name="border_light">#E5E7EB</color>
+    <color name="divider_light">#F3F4F6</color>
     <color name="divider_gray">#F3F4F6</color>
     
     <!-- Social Media Colors -->

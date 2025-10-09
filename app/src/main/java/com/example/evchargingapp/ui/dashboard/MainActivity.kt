@@ -19,6 +19,14 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 
 class MainActivity : AppCompatActivity() {
     
+    companion object {
+        private var instance: MainActivity? = null
+        
+        fun refreshUserNameIfActive() {
+            instance?.refreshUserName()
+        }
+    }
+    
     private lateinit var sessionManager: SessionManager
     private lateinit var tvUserName: TextView
     private lateinit var tvPageTitle: TextView
@@ -34,6 +42,9 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         
         setContentView(R.layout.activity_main)
+        
+        // Set instance reference for static callback
+        instance = this
         
         // Enable full screen and handle system bars (after content view is set)
         enableFullScreen()
@@ -52,6 +63,21 @@ class MainActivity : AppCompatActivity() {
         // Load default fragment
         if (savedInstanceState == null) {
             loadFragment(EnhancedDashboardFragment.newInstance())
+        }
+    }
+    
+    override fun onResume() {
+        super.onResume()
+        instance = this
+        // Refresh user name in case EV Owner profile was fetched after initial load
+        refreshUserName()
+    }
+    
+    override fun onDestroy() {
+        super.onDestroy()
+        // Clear instance reference
+        if (instance == this) {
+            instance = null
         }
     }
     
@@ -95,8 +121,13 @@ class MainActivity : AppCompatActivity() {
         bottomNavigation = findViewById(R.id.bottom_navigation)
         
         // Set user name in header
+        refreshUserName()
+    }
+    
+    private fun refreshUserName() {
         val userName = sessionManager.getUserName()
         tvUserName.text = "Hi, $userName!"
+        android.util.Log.d("MainActivity", "User name refreshed to: $userName")
     }
     
     private fun setupBottomNavigation() {

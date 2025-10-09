@@ -105,36 +105,6 @@ class ChargingStationRepository(private val apiService: ChargingStationApiServic
         }
     }
     
-    suspend fun getPendingReservations(): Result<List<BookingDetails>> {
-        return try {
-            val response = apiService.getPendingReservations()
-            handleApiResponse(response)
-        } catch (e: Exception) {
-            Log.e("ChargingStationRepo", "Error fetching pending reservations", e)
-            Result.failure(e)
-        }
-    }
-    
-    suspend fun getApprovedReservations(): Result<List<BookingDetails>> {
-        return try {
-            val response = apiService.getApprovedReservations()
-            handleApiResponse(response)
-        } catch (e: Exception) {
-            Log.e("ChargingStationRepo", "Error fetching approved reservations", e)
-            Result.failure(e)
-        }
-    }
-    
-    suspend fun getDashboardStats(): Result<DashboardStats> {
-        return try {
-            val response = apiService.getDashboardStats()
-            handleApiResponse(response)
-        } catch (e: Exception) {
-            Log.e("ChargingStationRepo", "Error fetching dashboard stats", e)
-            Result.failure(e)
-        }
-    }
-    
     private fun <T> handleApiResponse(response: Response<ApiResponse<T>>): Result<T> {
         return if (response.isSuccessful) {
             val apiResponse = response.body()

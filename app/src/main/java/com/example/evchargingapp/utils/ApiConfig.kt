@@ -11,13 +11,13 @@ object ApiConfig {
     
     // TODO: Replace with your actual API base URL
     // Using localhost for development - update this when you have a live server
-    const val BASE_URL = "http://10.0.2.2:5000/api/"  // Android emulator localhost
+    const val BASE_URL = "https://ev-charging-api.azurewebsites.net/api/"  // Android emulator localhost
     
     // For local testing with different IP configurations
     private const val LOCAL_BASE_URL = "http://192.168.1.100:5000/api/"
     
     // Alternative URLs for testing
-    private const val EMULATOR_LOCALHOST = "http://10.0.2.2:5000/api/"  // For Android emulator
+    private const val EMULATOR_LOCALHOST = "https://ev-charging-api.azurewebsites.net/api/"  // For Android emulator
     private const val DEVICE_LOCALHOST = "http://192.168.1.100:5000/api/"  // For physical device on same network
     
     // API endpoints - Updated to match backend controller
