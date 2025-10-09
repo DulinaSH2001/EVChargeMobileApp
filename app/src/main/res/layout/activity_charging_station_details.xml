@@ -287,9 +287,9 @@
                     android:id="@+id/btn_get_directions"
                     style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                     android:layout_width="0dp"
-                    android:layout_height="56dp"
-                    android:layout_weight="1"
+                    android:layout_height="match_parent"
                     android:layout_marginEnd="8dp"
+                    android:layout_weight="1"
                     android:text="Get Directions"
                     app:icon="@drawable/ic_directions"
                     app:iconGravity="textStart" />

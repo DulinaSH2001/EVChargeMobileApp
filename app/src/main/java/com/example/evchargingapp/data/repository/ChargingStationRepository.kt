@@ -6,18 +6,43 @@ import com.example.evchargingapp.data.api.ChargingStationApiService
 import com.example.evchargingapp.data.api.ChargingStationDto
 import com.example.evchargingapp.data.api.DashboardStats
 import com.example.evchargingapp.data.api.BookingDetails
+import com.example.evchargingapp.utils.LocationUtils
 import retrofit2.Response
 
 class ChargingStationRepository(private val apiService: ChargingStationApiService) {
     
+    /**
+     * Get nearby stations by first fetching all stations, then filtering by location
+     */
     suspend fun getNearbyStations(
         latitude: Double, 
         longitude: Double, 
         radius: Double = 10.0
     ): Result<List<ChargingStationDto>> {
         return try {
-            val response = apiService.getNearbyStations(latitude, longitude, radius)
-            handleApiResponse(response)
+            Log.d("ChargingStationRepo", "Fetching nearby stations for location: $latitude, $longitude within ${radius}km")
+            
+            // First get all stations from the API
+            val allStationsResult = getAllStations()
+            
+            if (allStationsResult.isSuccess) {
+                val allStations = allStationsResult.getOrNull() ?: emptyList()
+                Log.d("ChargingStationRepo", "Retrieved ${allStations.size} total stations")
+                
+                // Filter stations within radius and add distance information
+                val nearbyStations = LocationUtils.filterStationsWithinRadius(
+                    stations = allStations,
+                    userLatitude = latitude,
+                    userLongitude = longitude,
+                    radiusKm = radius
+                )
+                
+                Log.d("ChargingStationRepo", "Found ${nearbyStations.size} stations within ${radius}km")
+                Result.success(nearbyStations)
+            } else {
+                Log.e("ChargingStationRepo", "Failed to get all stations")
+                allStationsResult
+            }
         } catch (e: Exception) {
             Log.e("ChargingStationRepo", "Error fetching nearby stations", e)
             Result.failure(e)
@@ -40,6 +65,42 @@ class ChargingStationRepository(private val apiService: ChargingStationApiServic
             handleApiResponse(response)
         } catch (e: Exception) {
             Log.e("ChargingStationRepo", "Error fetching all stations", e)
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * Search stations by name or location
+     */
+    suspend fun searchStations(
+        query: String,
+        latitude: Double? = null,
+        longitude: Double? = null
+    ): Result<List<ChargingStationDto>> {
+        return try {
+            Log.d("ChargingStationRepo", "Searching stations with query: $query")
+            
+            // Get all stations first
+            val allStationsResult = getAllStations()
+            
+            if (allStationsResult.isSuccess) {
+                val allStations = allStationsResult.getOrNull() ?: emptyList()
+                
+                // Filter stations by search query
+                val filteredStations = allStations.filter { station ->
+                    station.name.contains(query, ignoreCase = true) ||
+                    station.location.contains(query, ignoreCase = true) ||
+                    station.getParsedAddress().contains(query, ignoreCase = true)
+                }
+                
+                Log.d("ChargingStationRepo", "Found ${filteredStations.size} stations matching query")
+                Result.success(filteredStations)
+            } else {
+                Log.e("ChargingStationRepo", "Failed to get all stations for search")
+                allStationsResult
+            }
+        } catch (e: Exception) {
+            Log.e("ChargingStationRepo", "Error searching stations", e)
             Result.failure(e)
         }
     }

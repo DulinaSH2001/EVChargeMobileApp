@@ -106,6 +106,12 @@ data class EvOwnerRegisterResponseData(
     val updatedAt: String
 )
 
+// NIC validation response for EV Owner login
+data class NicValidationResponseData(
+    @SerializedName("email")
+    val email: String
+)
+
 // Token verification response
 data class VerifyTokenResponseData(
     @SerializedName("user")
@@ -255,7 +261,32 @@ data class ChargingStationDto(
     val longitude: Double? = null,
     @SerializedName("distance")
     val distance: Double? = null // calculated distance from user location
-)
+) {
+    // Parse coordinates from location string if latitude/longitude are null
+    fun getCoordinateLatitude(): Double? {
+        return latitude ?: parseCoordinateFromLocation("latitude")
+    }
+    
+    fun getCoordinateLongitude(): Double? {
+        return longitude ?: parseCoordinateFromLocation("longitude")
+    }
+    
+    fun getParsedAddress(): String {
+        // Extract address from location string
+        val addressMatch = Regex("address:([^,]+)").find(location)
+        return addressMatch?.groupValues?.get(1)?.trim() ?: location
+    }
+    
+    private fun parseCoordinateFromLocation(coordinate: String): Double? {
+        return try {
+            val pattern = "$coordinate:([0-9.-]+)"
+            val match = Regex(pattern).find(location)
+            match?.groupValues?.get(1)?.toDouble()
+        } catch (e: Exception) {
+            null
+        }
+    }
+}
 
 data class SlotScheduleDto(
     @SerializedName("slotNumber")
@@ -286,4 +317,86 @@ data class DashboardStats(
     val approvedReservations: Int,
     @SerializedName("pastReservations")
     val pastReservations: Int
+)
+
+// Booking related models
+data class CreateBookingRequest(
+    @SerializedName("chargingStationId")
+    val chargingStationId: String,
+    @SerializedName("slotNumber")
+    val slotNumber: Int,
+    @SerializedName("reservationDateTime")
+    val reservationDateTime: String, // ISO 8601 format: "2025-09-28T10:00:00Z"
+    @SerializedName("duration")
+    val duration: Int, // Duration in minutes
+    @SerializedName("notes")
+    val notes: String? = null
+)
+
+data class UpdateBookingRequest(
+    @SerializedName("slotNumber")
+    val slotNumber: Int? = null,
+    @SerializedName("reservationDateTime")
+    val reservationDateTime: String? = null,
+    @SerializedName("duration")
+    val duration: Int? = null,
+    @SerializedName("notes")
+    val notes: String? = null
+)
+
+data class BookingDto(
+    @SerializedName("id")
+    val id: String,
+    @SerializedName("userId")
+    val userId: String,
+    @SerializedName("chargingStationId")
+    val chargingStationId: String,
+    @SerializedName("chargingStationName")
+    val chargingStationName: String? = null,
+    @SerializedName("chargingStationLocation")
+    val chargingStationLocation: String? = null,
+    @SerializedName("slotNumber")
+    val slotNumber: Int,
+    @SerializedName("reservationDateTime")
+    val reservationDateTime: String,
+    @SerializedName("duration")
+    val duration: Int,
+    @SerializedName("status")
+    val status: String, // PENDING, APPROVED, CANCELLED, COMPLETED
+    @SerializedName("notes")
+    val notes: String? = null,
+    @SerializedName("qrCode")
+    val qrCode: String? = null,
+    @SerializedName("createdAt")
+    val createdAt: String? = null,
+    @SerializedName("updatedAt")
+    val updatedAt: String? = null,
+    @SerializedName("isActive")
+    val isActive: Boolean? = null,
+    @SerializedName("userName")
+    val userName: String? = null
+) : java.io.Serializable {
+    
+    fun getParsedAddress(): String {
+        return chargingStationLocation?.let { location ->
+            try {
+                // Extract address from location string
+                val addressMatch = Regex("address:([^,]+)").find(location)
+                addressMatch?.groupValues?.get(1)?.trim() ?: location
+            } catch (e: Exception) {
+                location
+            }
+        } ?: "Location not available"
+    }
+}
+
+data class BookingSearchRequest(
+    @SerializedName("status")
+    val status: String? = null,
+    @SerializedName("fromDate")
+    val fromDate: String? = null,
+    @SerializedName("toDate")
+    val toDate: String? = null,
+    @SerializedName("chargingStationId")
+    val chargingStationId: String? = null
 )

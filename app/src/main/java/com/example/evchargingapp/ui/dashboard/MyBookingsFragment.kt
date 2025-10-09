@@ -62,10 +62,10 @@ class MyBookingsFragment : Fragment() {
         
         override fun createFragment(position: Int): Fragment {
             return when (position) {
-                0 -> BookingListFragment.newInstance(BookingStatus.PENDING)
-                1 -> BookingListFragment.newInstance(BookingStatus.APPROVED)
-                2 -> BookingListFragment.newInstance(BookingStatus.PAST)
-                else -> BookingListFragment.newInstance(BookingStatus.PENDING)
+                0 -> BookingListFragment.newInstance("PENDING")
+                1 -> BookingListFragment.newInstance("APPROVED")
+                2 -> BookingListFragment.newInstance("COMPLETED")
+                else -> BookingListFragment.newInstance("PENDING")
             }
         }
     }

@@ -14,7 +14,7 @@ object ApiConfig {
     const val BASE_URL = "http://10.0.2.2:5000/api/"  // Android emulator localhost
     
     // For local testing with different IP configurations
-    private const val LOCAL_BASE_URL = "http://192.168.1.100:3000/api/"
+    private const val LOCAL_BASE_URL = "http://192.168.1.100:5000/api/"
     
     // Alternative URLs for testing
     private const val EMULATOR_LOCALHOST = "http://10.0.2.2:5000/api/"  // For Android emulator
@@ -32,6 +32,7 @@ object ApiConfig {
     object Environment {
         const val USE_LOCALHOST = true  // Set to false when using remote server
         const val ENABLE_OFFLINE_MODE = true  // Always allow offline fallback
+        const val USE_EMULATOR = true  // Set to true for emulator, false for physical device
     }
     
     // HTTP client configuration
@@ -80,8 +81,13 @@ object ApiConfig {
     // Create authenticated retrofit instance with context
     fun getAuthenticatedRetrofit(context: Context): Retrofit {
         val authenticatedClient = createHttpClient(context)
+        val baseUrl = when {
+            !Environment.USE_LOCALHOST -> BASE_URL  // Remote server
+            Environment.USE_EMULATOR -> EMULATOR_LOCALHOST  // Emulator: 10.0.2.2:5000
+            else -> DEVICE_LOCALHOST  // Physical device: 192.168.1.100:5000
+        }
         return Retrofit.Builder()
-            .baseUrl(if (Environment.USE_LOCALHOST) LOCAL_BASE_URL else BASE_URL)
+            .baseUrl(baseUrl)
             .client(authenticatedClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()

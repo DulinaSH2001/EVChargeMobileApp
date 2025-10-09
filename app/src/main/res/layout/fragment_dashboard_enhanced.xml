@@ -19,33 +19,87 @@
             android:padding="16dp">
 
             <!-- Header Section -->
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rv_charging_stations"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false"
+                tools:listitem="@layout/item_charging_station" />
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:layout_marginBottom="24dp">
+                android:orientation="vertical">
 
-                <TextView
-                    android:layout_width="0dp"
+                <!-- Offline indicator -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/card_offline_indicator"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Dashboard"
-                    android:textSize="28sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/text_primary"
-                    android:fontFamily="sans-serif-medium" />
+                    android:layout_marginBottom="8dp"
+                    app:cardBackgroundColor="#FFF3E0"
+                    app:cardCornerRadius="8dp"
+                    app:cardElevation="2dp"
+                    android:visibility="gone">
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btn_refresh"
-                    style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    app:icon="@drawable/ic_refresh"
-                    app:iconSize="24dp"
-                    android:contentDescription="@string/refresh" />
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:padding="12dp"
+                        android:gravity="center_vertical">
+
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:layout_marginEnd="8dp"
+                            android:src="@drawable/ic_offline"
+                            app:tint="#FF9800" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Offline mode - Search still works!"
+                            android:textSize="14sp"
+                            android:textColor="#E65100" />
+
+                    </LinearLayout>
+
+                </com.google.android.material.card.MaterialCardView>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="24dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Dashboard"
+                        android:textSize="28sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_primary"
+                        android:fontFamily="sans-serif-medium" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_refresh"
+                        style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        app:icon="@drawable/ic_refresh"
+                        app:iconSize="24dp"
+                        android:contentDescription="@string/refresh" />
+
+                </LinearLayout>
 
             </LinearLayout>
+
+
 
             <!-- Statistics Cards Section -->
             <TextView
@@ -168,11 +222,125 @@
                 app:cardElevation="4dp"
                 app:strokeWidth="0dp">
 
-                <fragment
-                    android:id="@+id/map_fragment"
-                    android:name="com.google.android.gms.maps.SupportMapFragment"
+                <FrameLayout
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent" />
+                    android:layout_height="match_parent">
+
+                    <fragment
+                        android:id="@+id/map_fragment"
+                        android:name="com.google.android.gms.maps.SupportMapFragment"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent" />
+
+                    <!-- Search overlay on map -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_margin="16dp">
+
+                        <!-- Search container with dropdown -->
+                        <RelativeLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content">
+
+                            <!-- Search box -->
+                            <com.google.android.material.card.MaterialCardView
+                                android:id="@+id/card_search_box"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                app:cardCornerRadius="8dp"
+                                app:cardElevation="4dp"
+                                android:layout_marginBottom="2dp">
+
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:orientation="horizontal"
+                                    android:padding="4dp"
+                                    android:gravity="center_vertical"
+                                    android:background="@android:color/white">
+
+                                    <ImageView
+                                        android:layout_width="20dp"
+                                        android:layout_height="20dp"
+                                        android:layout_marginStart="12dp"
+                                        android:layout_marginEnd="12dp"
+                                        android:src="@drawable/ic_search"
+                                        android:contentDescription="Search"
+                                        app:tint="@color/text_secondary" />
+
+                                    <EditText
+                                        android:id="@+id/et_map_search"
+                                        android:layout_width="0dp"
+                                        android:layout_height="48dp"
+                                        android:layout_weight="1"
+                                        android:background="@android:color/transparent"
+                                        android:hint="Search for a place"
+                                        android:textSize="16sp"
+                                        android:textColorHint="@color/text_secondary"
+                                        android:textColor="@color/text_primary"
+                                        android:inputType="text"
+                                        android:maxLines="1"
+                                        android:imeOptions="actionSearch" />
+
+                                    <ImageButton
+                                        android:id="@+id/btn_clear_search"
+                                        android:layout_width="40dp"
+                                        android:layout_height="40dp"
+                                        android:layout_marginEnd="4dp"
+                                        android:background="?attr/selectableItemBackgroundBorderless"
+                                        android:src="@drawable/ic_close"
+                                        android:contentDescription="Clear"
+                                        android:visibility="gone"
+                                        app:tint="@color/text_secondary" />
+
+                                </LinearLayout>
+
+                            </com.google.android.material.card.MaterialCardView>
+
+                            <!-- Search suggestions dropdown -->
+                            <com.google.android.material.card.MaterialCardView
+                                android:id="@+id/card_search_suggestions"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_below="@id/card_search_box"
+                                android:layout_marginTop="1dp"
+                                app:cardCornerRadius="8dp"
+                                app:cardElevation="8dp"
+                                app:cardBackgroundColor="@android:color/white"
+                                app:strokeWidth="1dp"
+                                app:strokeColor="#E0E0E0"
+                                android:visibility="gone">
+
+                                <androidx.recyclerview.widget.RecyclerView
+                                    android:id="@+id/rv_search_suggestions"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:maxHeight="240dp"
+                                    android:scrollbars="vertical"
+                                    android:background="@android:color/white"
+                                    android:padding="4dp" />
+
+                            </com.google.android.material.card.MaterialCardView>
+
+                        </RelativeLayout>
+
+                    </LinearLayout>
+
+                    <!-- Current location button -->
+                    <com.google.android.material.floatingactionbutton.FloatingActionButton
+                        android:id="@+id/fab_current_location"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="bottom|end"
+                        android:layout_margin="16dp"
+                        android:src="@drawable/ic_my_location"
+                        android:contentDescription="Current Location"
+                        app:fabSize="normal"
+                        app:tint="@android:color/white" />
+
+                </FrameLayout>
 
             </com.google.android.material.card.MaterialCardView>
 
@@ -204,12 +372,6 @@
             </LinearLayout>
 
             <!-- Charging Stations RecyclerView -->
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/rv_charging_stations"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:nestedScrollingEnabled="false"
-                tools:listitem="@layout/item_charging_station" />
 
             <!-- Quick Actions Section -->
             <TextView
@@ -228,6 +390,17 @@
                 android:orientation="horizontal">
 
                 <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_my_bookings"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="56dp"
+                    android:layout_marginStart="8dp"
+                    android:layout_weight="1"
+                    android:text="My Bookings"
+                    app:icon="@drawable/ic_list"
+                    app:iconGravity="textStart" />
+
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_new_booking"
                     android:layout_width="0dp"
                     android:layout_height="56dp"
@@ -237,17 +410,6 @@
                     app:icon="@drawable/ic_add"
                     app:iconGravity="textStart"
                     style="@style/Widget.MaterialComponents.Button" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btn_my_bookings"
-                    android:layout_width="0dp"
-                    android:layout_height="56dp"
-                    android:layout_weight="1"
-                    android:layout_marginStart="8dp"
-                    android:text="My Bookings"
-                    app:icon="@drawable/ic_list"
-                    app:iconGravity="textStart"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
 
             </LinearLayout>
 
@@ -263,7 +425,13 @@
                 style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
                 android:visibility="gone" />
 
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="72dp" />
+
         </LinearLayout>
+
+
 
     </androidx.core.widget.NestedScrollView>
 

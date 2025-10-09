@@ -278,6 +278,73 @@ class AuthRepository(private val context: Context) {
         }
     }
     
+    suspend fun validateNic(nic: String): NicValidationResult = withContext(Dispatchers.IO) {
+        return@withContext try {
+            if (!networkUtils.isNetworkAvailable()) {
+                return@withContext NicValidationResult.Failure("No internet connection")
+            }
+            
+            val response = apiService.validateNic(nic)
+            if (response.isSuccessful && response.body()?.success == true) {
+                val data = response.body()!!.data
+                if (data != null) {
+                    NicValidationResult.Success(data.email)
+                } else {
+                    NicValidationResult.Failure("No data received")
+                }
+            } else {
+                val errorMessage = response.body()?.message ?: "User not found"
+                NicValidationResult.Failure(errorMessage)
+            }
+        } catch (e: Exception) {
+            Log.e("AuthRepository", "NIC validation error", e)
+            NicValidationResult.Failure("Validation failed: ${e.message}")
+        }
+    }
+    
+    suspend fun loginWithEmail(email: String, password: String): AuthResult = withContext(Dispatchers.IO) {
+        return@withContext try {
+            if (!networkUtils.isNetworkAvailable()) {
+                return@withContext AuthResult.Failure("No internet connection")
+            }
+            
+            val response = apiService.login(LoginRequest(email, password))
+            
+            if (response.isSuccessful && response.body()?.success == true) {
+                val responseBody = response.body()!!
+                val loginData = responseBody.data
+                
+                if (loginData != null) {
+                    val firstName = loginData.user.firstName ?: ""
+                    val lastName = loginData.user.lastName ?: ""
+                    val fullName = "$firstName $lastName".trim()
+                    
+                    val user = User(
+                        email = email,
+                        id = loginData.user.id,
+                        name = fullName,
+                        phone = "",
+                        password = password,
+                        role = UserRole.fromString(loginData.user.role),
+                        isActive = true,
+                        lastSyncTime = System.currentTimeMillis(),
+                        syncedWithServer = true
+                    )
+                    
+                    AuthResult.Success(user, loginData.token, "Login successful")
+                } else {
+                    AuthResult.Failure("Login failed: No user data received")
+                }
+            } else {
+                val errorMessage = response.body()?.message ?: "Invalid credentials"
+                AuthResult.Failure(errorMessage)
+            }
+        } catch (e: Exception) {
+            Log.e("AuthRepository", "Email login error", e)
+            AuthResult.Failure("Login failed: ${e.message}")
+        }
+    }
+    
     suspend fun syncPendingUsers() = withContext(Dispatchers.IO) {
         if (!networkUtils.isNetworkAvailable()) return@withContext
         
@@ -422,6 +489,11 @@ class AuthRepository(private val context: Context) {
             AuthResult.Failure("Failed to update profile: ${e.message}")
         }
     }
+}
+
+sealed class NicValidationResult {
+    data class Success(val email: String) : NicValidationResult()
+    data class Failure(val error: String) : NicValidationResult()
 }
 
 sealed class AuthResult {

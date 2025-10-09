@@ -1,8 +1,6 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.compose)
-    id("org.jetbrains.kotlin.kapt")
 }
 
 android {
@@ -36,28 +34,12 @@ android {
         jvmTarget = "11"
     }
     buildFeatures {
-        compose = true
+        viewBinding = true
     }
 }
 
 dependencies {
 
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(libs.androidx.activity.compose)
-    implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.compose.ui)
-    implementation(libs.androidx.compose.ui.graphics)
-    implementation(libs.androidx.compose.ui.tooling.preview)
-    implementation(libs.androidx.compose.material3)
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
-    debugImplementation(libs.androidx.compose.ui.tooling)
-    debugImplementation(libs.androidx.compose.ui.test.manifest)
-    
     // --- Added dependencies from user request ---
     // Core Android
     implementation("androidx.core:core-ktx:1.12.0")
@@ -85,11 +67,13 @@ dependencies {
     // Room Database (alternative to raw SQLite)
     implementation("androidx.room:room-runtime:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")
-    kapt("androidx.room:room-compiler:2.6.1")
+    // Note: Removed kapt for room-compiler as KAPT was causing issues
     
-    // Google Maps
+    // Google Maps and Places
     implementation("com.google.android.gms:play-services-maps:18.2.0")
     implementation("com.google.android.gms:play-services-location:21.1.0")
+    // implementation("com.google.android.gms:play-services-places:17.0.0") // Commented out - replaced by newer places library
+    implementation("com.google.android.libraries.places:places:3.3.0")
     
     // QR Code Generation
     implementation("com.google.zxing:core:3.5.2")
@@ -99,4 +83,9 @@ dependencies {
     // NOTE: com.budiyev.android:code-scanner could not be resolved from configured repositories.
     // If you want this library, please confirm the correct Maven coordinates or provide the repository (e.g., JitPack/GitHub) to fetch it from.
     // --- end added dependencies ---
+    
+    // Testing dependencies
+    testImplementation("junit:junit:4.13.2")
+    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
 }

@@ -181,4 +181,18 @@ class SessionManager(context: Context) {
         editor.clear()
         editor.apply()
     }
+    
+    // Debug method to log current session state
+    fun logSessionDebugInfo() {
+        android.util.Log.d("SessionManager", "=== Session Debug Info ===")
+        android.util.Log.d("SessionManager", "Is Logged In: ${isLoggedIn()}")
+        android.util.Log.d("SessionManager", "User Email: ${getEmail()}")
+        android.util.Log.d("SessionManager", "User ID: ${getUserId()}")
+        android.util.Log.d("SessionManager", "Has Token: ${!getToken().isNullOrEmpty()}")
+        android.util.Log.d("SessionManager", "Token Preview: ${getToken()?.take(20) ?: "null"}...")
+        android.util.Log.d("SessionManager", "User Type: ${getUserType()}")
+        android.util.Log.d("SessionManager", "Account Active: ${isAccountActive()}")
+        android.util.Log.d("SessionManager", "Login Time: ${getLoginTime()}")
+        android.util.Log.d("SessionManager", "========================")
+    }
 }

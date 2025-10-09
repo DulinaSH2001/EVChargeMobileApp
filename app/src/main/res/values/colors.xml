@@ -65,6 +65,14 @@
     <color name="accent_color">@color/primary_blue</color>
     <color name="text_on_surface">@color/text_primary</color>
     <color name="status_available">@color/success_green</color>
+    <color name="status_busy">#FF5722</color>
     <color name="status_occupied">#FF5722</color>
     <color name="status_maintenance">#FF9800</color>
+    <color name="info_background">#E3F2FD</color>
+    
+    <!-- Booking status colors -->
+    <color name="status_pending">#F59E0B</color>
+    <color name="status_approved">#22C55E</color>
+    <color name="status_cancelled">#EF4444</color>
+    <color name="status_completed">#6366F1</color>
 </resources>

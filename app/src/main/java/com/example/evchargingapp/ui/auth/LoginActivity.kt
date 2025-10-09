@@ -18,6 +18,7 @@ import com.example.evchargingapp.data.local.User
 import com.example.evchargingapp.data.local.UserType
 import com.example.evchargingapp.data.repository.AuthRepository
 import com.example.evchargingapp.data.repository.AuthResult
+import com.example.evchargingapp.data.repository.NicValidationResult
 import com.example.evchargingapp.utils.SessionManager
 import com.example.evchargingapp.utils.OfflineManager
 import kotlinx.coroutines.launch
@@ -33,8 +34,13 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var btnStationOperator: MaterialButton
     private lateinit var statusText: TextView
     private lateinit var inputLayoutIdentifier: com.google.android.material.textfield.TextInputLayout
+    private lateinit var inputLayoutPassword: com.google.android.material.textfield.TextInputLayout
     
     private var currentUserType: UserType = UserType.EV_OWNER
+    
+    // EV Owner two-step login state
+    private var evOwnerValidatedEmail: String? = null
+    private var isNicValidated: Boolean = false
     
     private lateinit var sessionManager: SessionManager
     private lateinit var authRepository: AuthRepository
@@ -61,6 +67,7 @@ class LoginActivity : AppCompatActivity() {
         btnStationOperator = findViewById(R.id.btn_station_operator)
         statusText = findViewById(R.id.status_text)
         inputLayoutIdentifier = findViewById(R.id.input_layout_identifier)
+        inputLayoutPassword = findViewById(R.id.input_layout_password)
         
         // Initialize components
         sessionManager = SessionManager(this)
@@ -82,10 +89,26 @@ class LoginActivity : AppCompatActivity() {
         btnStationOperator.setOnClickListener {
             selectUserType(UserType.STATION_OPERATOR)
         }
+        
+        // Add listener for NIC field when disabled (to go back to NIC validation step)
+        identifierInput.setOnClickListener {
+            if (currentUserType == UserType.EV_OWNER && isNicValidated && !identifierInput.isEnabled) {
+                // Allow user to go back and change NIC
+                isNicValidated = false
+                evOwnerValidatedEmail = null
+                updateUIForUserType()
+                Toast.makeText(this, "Please enter your NIC again", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
     
     private fun selectUserType(userType: UserType) {
         currentUserType = userType
+        
+        // Reset EV Owner two-step login state when switching user types
+        evOwnerValidatedEmail = null
+        isNicValidated = false
+        
         updateUIForUserType()
     }
     
@@ -114,13 +137,36 @@ class LoginActivity : AppCompatActivity() {
             btnStationOperator.strokeColor = resources.getColorStateList(R.color.border_light, null)
         }
         
-        // Update input field
-        inputLayoutIdentifier.hint = if (isEvOwner) "NIC" else "Email"
-        identifierInput.inputType = if (isEvOwner) 
-            android.text.InputType.TYPE_CLASS_TEXT else 
-            android.text.InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
+        // Update UI based on user type and two-step login state
+        if (isEvOwner) {
+            if (isNicValidated) {
+                // Step 2: Show password field
+                inputLayoutIdentifier.hint = "NIC"
+                identifierInput.isEnabled = false // Disable NIC field
+                inputLayoutPassword.visibility = View.VISIBLE
+                btnLogin.text = "Login"
+            } else {
+                // Step 1: Show only NIC field
+                inputLayoutIdentifier.hint = "NIC"
+                identifierInput.isEnabled = true
+                inputLayoutPassword.visibility = View.GONE
+                btnLogin.text = "Next"
+            }
+            identifierInput.inputType = android.text.InputType.TYPE_CLASS_TEXT
+        } else {
+            // Station Operator: Show both fields normally
+            inputLayoutIdentifier.hint = "Email"
+            identifierInput.isEnabled = true
+            inputLayoutPassword.visibility = View.VISIBLE
+            btnLogin.text = "Login"
+            identifierInput.inputType = android.text.InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
+        }
             
-        identifierInput.text?.clear()
+        // Clear inputs when switching user types
+        if (!isNicValidated) {
+            identifierInput.text?.clear()
+        }
+        passwordInput.text?.clear()
     }
     
     private fun checkOfflineStatus() {
@@ -134,23 +180,108 @@ class LoginActivity : AppCompatActivity() {
         val identifier = identifierInput.text.toString().trim()
         val password = passwordInput.text.toString()
         
-        if (!validateInput(identifier, password)) return
+        if (currentUserType == UserType.EV_OWNER) {
+            if (!isNicValidated) {
+                // Step 1: Validate NIC
+                attemptNicValidation(identifier)
+            } else {
+                // Step 2: Login with email and password
+                attemptEmailPasswordLogin()
+            }
+        } else {
+            // Station Operator: Normal login flow
+            if (!validateInput(identifier, password)) return
+            
+            setLoadingState(true)
+            lifecycleScope.launch {
+                try {
+                    val result = authRepository.loginHybrid(identifier, password, currentUserType)
+                    when (result) {
+                        is AuthResult.Success -> handleLoginSuccess(result.user, result.token, result.message)
+                        is AuthResult.Failure -> handleLoginFailure(result.error)
+                    }
+                } catch (e: Exception) {
+                    Log.e("LoginActivity", "Login error", e)
+                    handleLoginFailure("Login failed: ${e.message}")
+                } finally {
+                    setLoadingState(false)
+                }
+            }
+        }
+    }
+    
+    private fun attemptNicValidation(nic: String) {
+        if (TextUtils.isEmpty(nic)) {
+            identifierInput.error = "NIC required"
+            return
+        }
+        
+        if (nic.length < 10) {
+            identifierInput.error = "Please enter a valid NIC"
+            return
+        }
         
         setLoadingState(true)
         lifecycleScope.launch {
             try {
-                val result = authRepository.loginHybrid(identifier, password, currentUserType)
+                val result = authRepository.validateNic(nic)
+                when (result) {
+                    is NicValidationResult.Success -> {
+                        evOwnerValidatedEmail = result.email
+                        isNicValidated = true
+                        updateUIForUserType()
+                        Toast.makeText(this@LoginActivity, "NIC validated successfully. Please enter your password.", Toast.LENGTH_SHORT).show()
+                    }
+                    is NicValidationResult.Failure -> {
+                        handleNicValidationFailure(result.error)
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("LoginActivity", "NIC validation error", e)
+                handleNicValidationFailure("Validation failed: ${e.message}")
+            } finally {
+                setLoadingState(false)
+            }
+        }
+    }
+    
+    private fun attemptEmailPasswordLogin() {
+        val password = passwordInput.text.toString()
+        
+        if (TextUtils.isEmpty(password)) {
+            passwordInput.error = "Password required"
+            return
+        }
+        
+        if (evOwnerValidatedEmail == null) {
+            Toast.makeText(this, "Please validate NIC first", Toast.LENGTH_SHORT).show()
+            return
+        }
+        
+        setLoadingState(true)
+        lifecycleScope.launch {
+            try {
+                val result = authRepository.loginWithEmail(evOwnerValidatedEmail!!, password)
                 when (result) {
                     is AuthResult.Success -> handleLoginSuccess(result.user, result.token, result.message)
                     is AuthResult.Failure -> handleLoginFailure(result.error)
                 }
             } catch (e: Exception) {
-                Log.e("LoginActivity", "Login error", e)
+                Log.e("LoginActivity", "Email login error", e)
                 handleLoginFailure("Login failed: ${e.message}")
             } finally {
                 setLoadingState(false)
             }
         }
+    }
+    
+    private fun handleNicValidationFailure(error: String) {
+        Log.d("LoginActivity", "NIC validation failed: $error")
+        Toast.makeText(this, error, Toast.LENGTH_LONG).show()
+        
+        // Clear NIC field on failure
+        identifierInput.text?.clear()
+        identifierInput.error = error
     }
     
     private fun validateInput(identifier: String, password: String): Boolean {
@@ -220,7 +351,21 @@ class LoginActivity : AppCompatActivity() {
         val enabled = !isLoading
         listOf(btnLogin, btnRegister, btnEvOwner, btnStationOperator, identifierInput, passwordInput)
             .forEach { it.isEnabled = enabled }
-        btnLogin.text = if (isLoading) "Logging in..." else "Login"
+        
+        // Set appropriate button text based on loading state and current step
+        if (isLoading) {
+            btnLogin.text = if (currentUserType == UserType.EV_OWNER && !isNicValidated) {
+                "Validating..."
+            } else {
+                "Logging in..."
+            }
+        } else {
+            btnLogin.text = if (currentUserType == UserType.EV_OWNER && !isNicValidated) {
+                "Next"
+            } else {
+                "Login"
+            }
+        }
     }
     
     override fun onResume() {

@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.evchargingapp.R
 import com.example.evchargingapp.data.api.ChargingStationDto
+import com.example.evchargingapp.utils.LocationUtils
 import com.google.android.material.button.MaterialButton
 import kotlin.math.roundToInt
 
@@ -41,7 +42,9 @@ class ChargingStationAdapter(
 
         fun bind(station: ChargingStationDto) {
             tvStationName.text = station.name
-            tvStationLocation.text = station.location
+            
+            // Use the new parsed address method from data model
+            tvStationLocation.text = station.getParsedAddress()
             
             // Format distance
             station.distance?.let { distance ->

@@ -23,6 +23,9 @@ interface AuthApiService {
     @POST("EVOwner")
     suspend fun registerEvOwner(@Body request: EvOwnerRegisterRequest): Response<ApiResponse<EvOwnerRegisterResponseData>>
     
+    @GET("EVOwner/user/{nic}")
+    suspend fun validateNic(@Path("nic") nic: String): Response<ApiResponse<NicValidationResponseData>>
+    
     // Operator specific endpoints
     @POST("auth/login")
     suspend fun operatorLogin(@Body request: OperatorLoginRequest): Response<ApiResponse<OperatorLoginResponseData>>
