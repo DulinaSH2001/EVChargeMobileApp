@@ -17,8 +17,8 @@
         android:networkSecurityConfig="@xml/network_security_config"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.EvChargingApp">
-        <activity android:name=".ui.auth.SplashActivity" android:exported="true" android:theme="@style/Theme.EvChargingApp">
+        android:theme="@style/Theme.VoltVoyage">
+        <activity android:name=".ui.auth.SplashActivity" android:exported="true" android:theme="@style/Theme.VoltVoyage">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

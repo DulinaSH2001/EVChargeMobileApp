@@ -2,7 +2,7 @@
 
 ## Overview
 
-I've created an enhanced dashboard for your EV Charging App with the following improvements:
+I've created an enhanced dashboard for VoltVoyage with the following improvements:
 
 ### New Features Added:
 
@@ -184,4 +184,4 @@ All icons are vector drawables in `/res/drawable/`. You can replace them with yo
 - **Error Handling** - Graceful failure management
 - **Scalable** - Easy to add new features
 
-The enhanced dashboard provides a solid foundation for your EV charging app with room for future enhancements and customization.
+The enhanced dashboard provides a solid foundation for VoltVoyage with room for future enhancements and customization.

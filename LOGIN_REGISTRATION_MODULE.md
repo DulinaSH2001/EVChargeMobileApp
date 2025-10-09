@@ -1,8 +1,8 @@
-# EV Charging App - Login & Registration Module
+# VoltVoyage - Login & Registration Module
 
 ## Overview
 
-Complete implementation of the Login & Registration Module with local and remote API integration for the EV Charging App.
+Complete implementation of the Login & Registration Module with local and remote API integration for VoltVoyage.
 
 ## Features Implemented
 

@@ -13,7 +13,7 @@ class SessionManager(context: Context) {
     private val editor: SharedPreferences.Editor = prefs.edit()
     
     companion object {
-        private const val PREF_NAME = "EVChargingAppPrefs"
+        private const val PREF_NAME = "VoltVoyagePrefs"
         private const val KEY_LOGGED_IN = "logged_in"
         private const val KEY_EMAIL = "email" // Changed from KEY_NIC to KEY_EMAIL
         private const val KEY_ID = "user_id" // Backend user ID

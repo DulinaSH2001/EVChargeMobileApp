@@ -167,7 +167,7 @@
                         android:id="@+id/switch_dark_theme"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:theme="@style/Theme.EvChargingApp.Switch" />
+                        android:theme="@style/Theme.VoltVoyage.Switch" />
 
                 </LinearLayout>
 

@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">EvChargingApp</string>
+    <string name="app_name">VoltVoyage</string>
     
     <!-- Google Maps API Key - Replace with your actual key -->
     <string name="google_maps_key">AIzaSyAYq27m2uvVwGQVhKNNSo-8Q6Iz5u1bsxo</string>

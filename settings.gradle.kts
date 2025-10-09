@@ -20,6 +20,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "EvChargingApp"
+rootProject.name = "VoltVoyage"
 include(":app")
  
