@@ -74,6 +74,7 @@
     <!-- Booking status colors -->
     <color name="status_pending">#F59E0B</color>
     <color name="status_approved">#22C55E</color>
+    <color name="status_in_progress">#3B82F6</color>
     <color name="status_cancelled">#EF4444</color>
     <color name="status_completed">#6366F1</color>
 </resources>

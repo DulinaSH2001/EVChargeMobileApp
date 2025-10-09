@@ -6,7 +6,7 @@
     
     <!-- Dashboard strings -->
     <string name="pending_reservations">Pending Reservations</string>
-    <string name="approved_reservations">Approved Reservations</string>
+    <string name="inprogress_reservations">InProgress Reservations</string>
     <string name="nearby_stations">Nearby Charging Stations</string>
     <string name="refresh">Refresh</string>
     <string name="view_details">View Details</string>

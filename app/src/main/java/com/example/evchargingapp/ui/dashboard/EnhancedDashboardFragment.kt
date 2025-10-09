@@ -421,26 +421,32 @@ class EnhancedDashboardFragment : Fragment() {
         
         btnNewBooking.setOnClickListener {
             // Navigate to new booking screen
+            (activity as? MainActivity)?.createNewBooking()
         }
         
         btnMyBookings.setOnClickListener {
             // Navigate to my bookings screen
+            (activity as? MainActivity)?.navigateToBookings()
         }
         
         btnScanQr.setOnClickListener {
             // Navigate to QR scanner
+            (activity as? MainActivity)?.scanQRCode()
         }
         
         btnViewAll.setOnClickListener {
-            // Navigate to all stations view
+            // Navigate to all stations view - for now, scroll to stations list
+            rvChargingStations.smoothScrollToPosition(0)
         }
         
         cardPending.setOnClickListener {
-            // Navigate to pending bookings
+            // Navigate to pending bookings - same as My Bookings for now
+            (activity as? MainActivity)?.navigateToBookings()
         }
         
         cardApproved.setOnClickListener {
-            // Navigate to approved bookings
+            // Navigate to approved bookings - same as My Bookings for now
+            (activity as? MainActivity)?.navigateToBookings()
         }
         
         // Current location FAB

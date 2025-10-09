@@ -123,7 +123,7 @@ class BookingListFragment : Fragment() {
             onEditClick = { booking ->
                 // Navigate to edit booking after fetching fresh data
                 val normalizedStatus = getStatusText(booking.status).uppercase()
-                if (normalizedStatus in listOf("PENDING", "APPROVED")) {
+                if (normalizedStatus in listOf("PENDING", "CONFIRMED")) {
                     fetchBookingDetailsAndEdit(booking.id)
                 } else {
                     Toast.makeText(context, "This booking cannot be edited", Toast.LENGTH_SHORT)
@@ -133,7 +133,7 @@ class BookingListFragment : Fragment() {
             onCancelClick = { booking ->
                 // Handle booking cancellation
                 val normalizedStatus = getStatusText(booking.status).uppercase()
-                if (normalizedStatus in listOf("PENDING", "APPROVED")) {
+                if (normalizedStatus in listOf("PENDING", "CONFIRMED")) {
                     cancelBooking(booking)
                 } else {
                     Toast.makeText(context, "This booking cannot be cancelled", Toast.LENGTH_SHORT)
@@ -159,13 +159,13 @@ class BookingListFragment : Fragment() {
                 tvEmptyMessage.text = "You don't have any pending bookings at the moment."
             }
 
-            "APPROVED" -> {
-                tvEmptyTitle.text = "No Approved Bookings"
-                tvEmptyMessage.text = "You don't have any approved bookings at the moment."
+            "INPROGRESS" -> {
+                tvEmptyTitle.text = "No In-Progress Bookings"
+                tvEmptyMessage.text = "You don't have any bookings currently in progress."
             }
 
             "COMPLETED" -> {
-                tvEmptyTitle.text = "No Past Bookings"
+                tvEmptyTitle.text = "No Completed Bookings"
                 tvEmptyMessage.text = "You haven't completed any bookings yet."
                 btnCreateBooking.visibility = View.GONE
             }
@@ -360,14 +360,20 @@ class BookingListFragment : Fragment() {
         return when (status.trim().uppercase()) {
             // Handle string status values from API
             "PENDING" -> "Pending"
-            "APPROVED" -> "Approved"
-            "CANCELLED" -> "Cancelled"
+            "CONFIRMED" -> "Confirmed"
+            "INPROGRESS" -> "InProgress"
+            "IN_PROGRESS" -> "InProgress"
             "COMPLETED" -> "Completed"
-            // Handle numeric status values (backward compatibility)
+            "CANCELLED" -> "Cancelled"
+            "NOSHOW" -> "NoShow"
+            "NO_SHOW" -> "NoShow"
+            // Handle numeric status values from backend enum
             "0" -> "Pending"
-            "1" -> "Approved"
-            "2" -> "Cancelled"
+            "1" -> "Confirmed"
+            "2" -> "InProgress"
             "3" -> "Completed"
+            "4" -> "Cancelled"
+            "5" -> "NoShow"
             else -> status.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() }
         }
     }

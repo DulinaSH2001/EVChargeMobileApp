@@ -98,15 +98,15 @@ class DashboardFragment : Fragment() {
                 bookingDataManager.getAllBookings().collectLatest { allBookings ->
                     // Filter bookings by status locally using normalized status
                     val pendingBookings = allBookings.filter { getStatusText(it.status).equals("Pending", ignoreCase = true) }
-                    val approvedBookings = allBookings.filter { getStatusText(it.status).equals("Approved", ignoreCase = true) }
+                    val inProgressBookings = allBookings.filter { getStatusText(it.status).equals("InProgress", ignoreCase = true) }
                     val completedBookings = allBookings.filter { getStatusText(it.status).equals("Completed", ignoreCase = true) }
                     
-                    // Update UI with counts
+                    // Update UI with counts - using InProgress instead of Approved
                     tvPendingCount.text = pendingBookings.size.toString()
-                    tvApprovedCount.text = approvedBookings.size.toString()
+                    tvApprovedCount.text = inProgressBookings.size.toString()
                     tvPastCount.text = completedBookings.size.toString()
                     
-                    Log.d(TAG, "Statistics loaded: ${pendingBookings.size} pending, ${approvedBookings.size} approved, ${completedBookings.size} completed")
+                    Log.d(TAG, "Statistics loaded: ${pendingBookings.size} pending, ${inProgressBookings.size} in progress, ${completedBookings.size} completed")
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Error loading statistics", e)
@@ -158,14 +158,20 @@ class DashboardFragment : Fragment() {
         return when (status.trim().uppercase()) {
             // Handle string status values from API
             "PENDING" -> "Pending"
-            "APPROVED" -> "Approved"
-            "CANCELLED" -> "Cancelled"
+            "CONFIRMED" -> "Confirmed"
+            "INPROGRESS" -> "InProgress"
+            "IN_PROGRESS" -> "InProgress"
             "COMPLETED" -> "Completed"
-            // Handle numeric status values (backward compatibility)
+            "CANCELLED" -> "Cancelled"
+            "NOSHOW" -> "NoShow"
+            "NO_SHOW" -> "NoShow"
+            // Handle numeric status values from backend enum
             "0" -> "Pending"
-            "1" -> "Approved"
-            "2" -> "Cancelled"
+            "1" -> "Confirmed"
+            "2" -> "InProgress"
             "3" -> "Completed"
+            "4" -> "Cancelled"
+            "5" -> "NoShow"
             else -> status.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() }
         }
     }

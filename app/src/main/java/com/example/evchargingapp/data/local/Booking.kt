@@ -12,8 +12,10 @@ data class Booking(
 )
 
 enum class BookingStatus {
-    PENDING,
-    APPROVED,
-    PAST,
-    CANCELLED
+    PENDING,        // 0
+    CONFIRMED,      // 1
+    INPROGRESS,     // 2
+    COMPLETED,      // 3
+    CANCELLED,      // 4
+    NOSHOW          // 5
 }

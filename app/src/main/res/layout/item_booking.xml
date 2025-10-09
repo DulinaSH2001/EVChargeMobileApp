@@ -6,10 +6,12 @@
     android:id="@+id/card_booking"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:layout_marginHorizontal="12dp"
     android:layout_marginBottom="12dp"
     app:cardCornerRadius="12dp"
     app:cardElevation="3dp"
     app:strokeWidth="0dp"
+    app:cardBackgroundColor="@color/card_background"
     android:clickable="true"
     android:focusable="true"
     android:foreground="?android:attr/selectableItemBackground">
@@ -18,7 +20,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="14dp">
 
         <!-- Header Section -->
         <LinearLayout
@@ -27,6 +29,13 @@
             android:orientation="horizontal"
             android:gravity="center_vertical"
             android:layout_marginBottom="12dp">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/ic_charging_station"
+                app:tint="@color/primary_blue"
+                android:layout_marginEnd="10dp" />
 
             <LinearLayout
                 android:layout_width="0dp"
@@ -42,17 +51,33 @@
                     android:textSize="16sp"
                     android:textStyle="bold"
                     android:textColor="@color/text_primary"
+                    android:fontFamily="sans-serif-medium"
                     tools:text="Central Mall Charging Station" />
 
-                <TextView
-                    android:id="@+id/tv_station_location"
+                <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Location"
-                    android:textSize="14sp"
-                    android:textColor="@color/text_secondary"
-                    android:layout_marginTop="2dp"
-                    tools:text="Colombo 01, Sri Lanka" />
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginTop="2dp">
+
+                    <ImageView
+                        android:layout_width="14dp"
+                        android:layout_height="14dp"
+                        android:src="@drawable/ic_location"
+                        app:tint="@color/text_secondary"
+                        android:layout_marginEnd="4dp" />
+
+                    <TextView
+                        android:id="@+id/tv_station_location"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Location"
+                        android:textSize="13sp"
+                        android:textColor="@color/text_secondary"
+                        tools:text="Colombo 01, Sri Lanka" />
+
+                </LinearLayout>
 
             </LinearLayout>
 
@@ -61,10 +86,10 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="PENDING"
-                android:textSize="12sp"
+                android:textSize="11sp"
                 android:textStyle="bold"
                 android:paddingHorizontal="12dp"
-                android:paddingVertical="4dp"
+                android:paddingVertical="6dp"
                 tools:text="APPROVED" />
 
         </LinearLayout>
@@ -74,7 +99,11 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_marginBottom="12dp">
+            android:layout_marginBottom="12dp"
+            android:background="@color/light_blue"
+            android:padding="12dp"
+            android:layout_marginHorizontal="2dp"
+            android:elevation="1dp">
 
             <!-- Date and Time -->
             <LinearLayout
@@ -84,6 +113,13 @@
                 android:orientation="vertical"
                 android:gravity="center">
 
+                <ImageView
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:src="@drawable/ic_calendar"
+                    app:tint="@color/primary_blue"
+                    android:layout_marginBottom="6dp" />
+
                 <TextView
                     android:id="@+id/tv_booking_date"
                     android:layout_width="wrap_content"
@@ -92,6 +128,7 @@
                     android:textSize="14sp"
                     android:textStyle="bold"
                     android:textColor="@color/text_primary"
+                    android:fontFamily="sans-serif-medium"
                     tools:text="Oct 09, 2025" />
 
                 <TextView
@@ -99,16 +136,19 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="14:30"
-                    android:textSize="14sp"
-                    android:textColor="@color/text_secondary"
+                    android:textSize="13sp"
+                    android:textColor="@color/primary_blue"
+                    android:textStyle="bold"
+                    android:layout_marginTop="1dp"
                     tools:text="14:30" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Date and Time"
-                    android:textSize="12sp"
-                    android:textColor="@color/text_secondary" />
+                    android:text="Date &amp; Time"
+                    android:textSize="10sp"
+                    android:textColor="@color/text_secondary"
+                    android:layout_marginTop="2dp" />
 
             </LinearLayout>
 
@@ -126,6 +166,13 @@
                 android:orientation="vertical"
                 android:gravity="center">
 
+                <ImageView
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:src="@drawable/ic_time"
+                    app:tint="@color/primary_blue"
+                    android:layout_marginBottom="6dp" />
+
                 <TextView
                     android:id="@+id/tv_duration"
                     android:layout_width="wrap_content"
@@ -134,14 +181,16 @@
                     android:textSize="14sp"
                     android:textStyle="bold"
                     android:textColor="@color/text_primary"
+                    android:fontFamily="sans-serif-medium"
                     tools:text="60 min" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Duration"
-                    android:textSize="12sp"
-                    android:textColor="@color/text_secondary" />
+                    android:textSize="10sp"
+                    android:textColor="@color/text_secondary"
+                    android:layout_marginTop="2dp" />
 
             </LinearLayout>
 
@@ -159,6 +208,13 @@
                 android:orientation="vertical"
                 android:gravity="center">
 
+                <ImageView
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:src="@drawable/ic_charging_station"
+                    app:tint="@color/primary_blue"
+                    android:layout_marginBottom="6dp" />
+
                 <TextView
                     android:id="@+id/tv_slot_number"
                     android:layout_width="wrap_content"
@@ -167,29 +223,51 @@
                     android:textSize="14sp"
                     android:textStyle="bold"
                     android:textColor="@color/text_primary"
+                    android:fontFamily="sans-serif-medium"
                     tools:text="Slot 2" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Charging Slot"
-                    android:textSize="12sp"
-                    android:textColor="@color/text_secondary" />
+                    android:textSize="10sp"
+                    android:textColor="@color/text_secondary"
+                    android:layout_marginTop="2dp" />
 
             </LinearLayout>
 
         </LinearLayout>
 
-        <!-- Booking ID -->
-        <TextView
-            android:id="@+id/tv_booking_id"
-            android:layout_width="wrap_content"
+        <!-- Booking ID with improved styling -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="ID: ABC12345"
-            android:textSize="12sp"
-            android:textColor="@color/text_secondary"
-            android:layout_marginBottom="12dp"
-            tools:text="ID: BK123456" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="14dp"
+            android:background="@drawable/rounded_background_light"
+            android:padding="10dp"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:src="@drawable/ic_qr_code"
+                app:tint="@color/text_secondary"
+                android:layout_marginEnd="6dp" />
+
+            <TextView
+                android:id="@+id/tv_booking_id"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="ID: ABC12345"
+                android:textSize="12sp"
+                android:textColor="@color/text_primary"
+                android:textStyle="bold"
+                android:fontFamily="monospace"
+                tools:text="ID: BK123456" />
+
+        </LinearLayout>
 
         <!-- Action Buttons -->
         <LinearLayout
@@ -203,25 +281,33 @@
                 android:layout_width="wrap_content"
                 android:layout_height="36dp"
                 android:text="Edit"
-                android:textSize="12sp"
+                android:textSize="11sp"
                 style="@style/Widget.Material3.Button.OutlinedButton"
-                app:cornerRadius="8dp"
+                app:cornerRadius="18dp"
+                app:strokeColor="@color/primary_blue"
+                android:textColor="@color/primary_blue"
                 android:layout_marginEnd="8dp"
                 android:minWidth="0dp"
-                android:paddingHorizontal="16dp" />
+                android:paddingHorizontal="16dp"
+                app:icon="@drawable/ic_booking"
+                app:iconSize="14dp"
+                app:iconTint="@color/primary_blue" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_cancel"
                 android:layout_width="wrap_content"
                 android:layout_height="36dp"
                 android:text="Cancel"
-                android:textSize="12sp"
+                android:textSize="11sp"
                 style="@style/Widget.Material3.Button.OutlinedButton"
-                app:cornerRadius="8dp"
+                app:cornerRadius="18dp"
                 app:strokeColor="@color/status_cancelled"
                 android:textColor="@color/status_cancelled"
                 android:minWidth="0dp"
-                android:paddingHorizontal="16dp" />
+                android:paddingHorizontal="16dp"
+                app:icon="@drawable/ic_close"
+                app:iconSize="14dp"
+                app:iconTint="@color/status_cancelled" />
 
         </LinearLayout>
 

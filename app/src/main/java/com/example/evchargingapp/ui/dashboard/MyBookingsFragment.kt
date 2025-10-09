@@ -48,8 +48,8 @@ class MyBookingsFragment : Fragment() {
         TabLayoutMediator(tabLayout, viewPager) { tab, position ->
             tab.text = when (position) {
                 0 -> "Pending"
-                1 -> "Approved"
-                2 -> "Past"
+                1 -> "InProgress"
+                2 -> "Completed"
                 else -> ""
             }
         }.attach()
@@ -63,7 +63,7 @@ class MyBookingsFragment : Fragment() {
         override fun createFragment(position: Int): Fragment {
             return when (position) {
                 0 -> BookingListFragment.newInstance("PENDING")
-                1 -> BookingListFragment.newInstance("APPROVED")
+                1 -> BookingListFragment.newInstance("INPROGRESS")
                 2 -> BookingListFragment.newInstance("COMPLETED")
                 else -> BookingListFragment.newInstance("PENDING")
             }

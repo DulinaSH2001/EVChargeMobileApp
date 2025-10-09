@@ -79,31 +79,39 @@ class BookingAdapter(
             
             when (statusText.uppercase()) {
                 "PENDING" -> {
-                    tvStatus.setTextColor(ContextCompat.getColor(itemView.context, R.color.status_pending))
+                    tvStatus.setTextColor(ContextCompat.getColor(itemView.context, R.color.white))
                     tvStatus.setBackgroundResource(R.drawable.background_status_pending)
                 }
-                "APPROVED" -> {
-                    tvStatus.setTextColor(ContextCompat.getColor(itemView.context, R.color.status_approved))
+                "CONFIRMED" -> {
+                    tvStatus.setTextColor(ContextCompat.getColor(itemView.context, R.color.white))
                     tvStatus.setBackgroundResource(R.drawable.background_status_approved)
                 }
+                "INPROGRESS" -> {
+                    tvStatus.setTextColor(ContextCompat.getColor(itemView.context, R.color.white))
+                    tvStatus.setBackgroundResource(R.drawable.background_status_in_progress)
+                }
                 "CANCELLED" -> {
-                    tvStatus.setTextColor(ContextCompat.getColor(itemView.context, R.color.status_cancelled))
+                    tvStatus.setTextColor(ContextCompat.getColor(itemView.context, R.color.white))
                     tvStatus.setBackgroundResource(R.drawable.background_status_cancelled)
                 }
                 "COMPLETED" -> {
-                    tvStatus.setTextColor(ContextCompat.getColor(itemView.context, R.color.status_completed))
+                    tvStatus.setTextColor(ContextCompat.getColor(itemView.context, R.color.white))
                     tvStatus.setBackgroundResource(R.drawable.background_status_completed)
                 }
+                "NOSHOW" -> {
+                    tvStatus.setTextColor(ContextCompat.getColor(itemView.context, R.color.white))
+                    tvStatus.setBackgroundResource(R.drawable.background_status_cancelled)
+                }
                 else -> {
-                    tvStatus.setTextColor(ContextCompat.getColor(itemView.context, R.color.text_secondary))
+                    tvStatus.setTextColor(ContextCompat.getColor(itemView.context, R.color.white))
                     tvStatus.setBackgroundResource(R.drawable.background_status_default)
                 }
             }
 
             // Configure buttons based on status
             val normalizedStatus = getStatusText(booking.status).uppercase()
-            val canEdit = normalizedStatus == "PENDING" || normalizedStatus == "APPROVED"
-            val canCancel = normalizedStatus == "PENDING" || normalizedStatus == "APPROVED"
+            val canEdit = normalizedStatus == "PENDING" || normalizedStatus == "CONFIRMED"
+            val canCancel = normalizedStatus == "PENDING" || normalizedStatus == "CONFIRMED"
 
             btnEdit.visibility = if (canEdit) View.VISIBLE else View.GONE
             btnCancel.visibility = if (canCancel) View.VISIBLE else View.GONE
@@ -121,14 +129,20 @@ class BookingAdapter(
             return when (status.trim().uppercase()) {
                 // Handle string status values from API
                 "PENDING" -> "Pending"
-                "APPROVED" -> "Approved"
-                "CANCELLED" -> "Cancelled"
+                "CONFIRMED" -> "Confirmed"
+                "INPROGRESS" -> "InProgress"
+                "IN_PROGRESS" -> "InProgress"
                 "COMPLETED" -> "Completed"
-                // Handle numeric status values (backward compatibility)
+                "CANCELLED" -> "Cancelled"
+                "NOSHOW" -> "NoShow"
+                "NO_SHOW" -> "NoShow"
+                // Handle numeric status values from backend enum
                 "0" -> "Pending"
-                "1" -> "Approved"
-                "2" -> "Cancelled"
+                "1" -> "Confirmed"
+                "2" -> "InProgress"
                 "3" -> "Completed"
+                "4" -> "Cancelled"
+                "5" -> "NoShow"
                 else -> status.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() }
             }
         }
