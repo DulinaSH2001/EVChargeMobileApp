@@ -176,22 +176,8 @@ class ReservationListActivity : AppCompatActivity() {
     }
 
     private fun showBookingDetails(booking: BookingDto) {
-        // For now, just show a toast with booking details
-        // You can implement a detailed view dialog or activity later
-        val details = """
-            Booking ID: ${booking.id}
-            Station: ${booking.chargingStationName ?: "Unknown"}
-            Slot: ${booking.slotNumber}
-            Date/Time: ${booking.reservationDateTime}
-            Duration: ${booking.duration} minutes
-            Status: ${booking.status}
-        """.trimIndent()
-
-        AlertDialog.Builder(this)
-            .setTitle("Booking Details")
-            .setMessage(details)
-            .setPositiveButton("OK", null)
-            .show()
+        // Navigate to BookingDetailsActivity
+        BookingDetailsActivity.start(this, booking)
     }
 
     private fun updateUI(bookings: List<BookingDto>) {

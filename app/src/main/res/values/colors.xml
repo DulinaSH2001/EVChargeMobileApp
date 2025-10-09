@@ -41,6 +41,13 @@
     <color name="error_red">#EF4444</color>
     <color name="warning_orange">#F59E0B</color>
     
+    <!-- Status Text Colors -->
+    <color name="status_pending_text">#E65100</color>
+    <color name="status_confirmed_text">#2E7D32</color>
+    <color name="status_inprogress_text">#1976D2</color>
+    <color name="status_cancelled_text">#C62828</color>
+    <color name="status_completed_text">#00695C</color>
+    
     <!-- Utility Colors -->
     <color name="transparent">#00000000</color>
     <color name="shadow_light">#0A000000</color>

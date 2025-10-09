@@ -244,13 +244,8 @@ class BookingListFragment : Fragment() {
     }
 
     private fun showBookingDetails(booking: BookingDto) {
-        // TODO: Navigate to booking details screen
-        // For now, show a simple message
-        android.widget.Toast.makeText(
-            context,
-            "Viewing details for ${booking.chargingStationName}",
-            android.widget.Toast.LENGTH_SHORT
-        ).show()
+        // Navigate to BookingDetailsActivity
+        com.example.evchargingapp.ui.booking.BookingDetailsActivity.start(requireContext(), booking)
     }
 
     private fun cancelBooking(booking: BookingDto) {

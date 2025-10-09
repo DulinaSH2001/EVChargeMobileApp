@@ -21,12 +21,12 @@ class BookingDetailsActivity : AppCompatActivity() {
     private lateinit var sessionManager: SessionManager
     private lateinit var operatorRepository: OperatorRepository
     
-    // UI Components
-    private lateinit var tvBookingId: TextView
+    // UI Components - made nullable to handle layout differences
+    private var tvBookingId: TextView? = null
     private lateinit var tvCustomerName: TextView
     private lateinit var tvCustomerContact: TextView
     private lateinit var tvVehicleNumber: TextView
-    private lateinit var tvBookingDate: TextView
+    private var tvBookingDate: TextView? = null
     private lateinit var tvTimeSlot: TextView
     private lateinit var tvStatus: TextView
     private lateinit var btnConfirm: MaterialButton
@@ -55,11 +55,10 @@ class BookingDetailsActivity : AppCompatActivity() {
     }
     
     private fun initViews() {
-        tvBookingId = findViewById(R.id.tv_booking_id)
+        // Only initialize views that exist in the layout
         tvCustomerName = findViewById(R.id.tv_customer_name)
         tvCustomerContact = findViewById(R.id.tv_customer_contact)
         tvVehicleNumber = findViewById(R.id.tv_vehicle_number)
-        tvBookingDate = findViewById(R.id.tv_booking_date)
         tvTimeSlot = findViewById(R.id.tv_time_slot)
         tvStatus = findViewById(R.id.tv_status)
         btnConfirm = findViewById(R.id.btn_confirm)
@@ -69,6 +68,10 @@ class BookingDetailsActivity : AppCompatActivity() {
         cardFinalizeInputs = findViewById(R.id.card_finalize_inputs)
         etEnergyConsumed = findViewById(R.id.et_energy_consumed)
         etTotalCost = findViewById(R.id.et_total_cost)
+        
+        // Handle optional fields
+        tvBookingDate = findViewById<TextView?>(R.id.tv_booking_date) // This exists in the layout
+        tvBookingId = findViewById<TextView?>(R.id.tv_booking_id) // This may not exist (hidden)
     }
     
     private fun setupClickListeners() {
@@ -99,11 +102,16 @@ class BookingDetailsActivity : AppCompatActivity() {
     }
     
     private fun populateBookingDetails(booking: BookingDetails) {
-        tvBookingId.text = "Booking ID: ${booking.id}"
+        // Only set booking ID if the view exists (it's hidden in the new layout)
+        tvBookingId?.text = "Booking ID: ${booking.id}"
+        
         tvCustomerName.text = booking.evOwnerName
         tvCustomerContact.text = booking.contactNumber ?: "Not provided"
         tvVehicleNumber.text = booking.vehicleNumber ?: "Not provided"
-        tvBookingDate.text = booking.bookingDate
+        
+        // Use the correct date field
+        tvBookingDate?.text = booking.bookingDate
+        
         tvTimeSlot.text = "${booking.startTime} - ${booking.endTime}"
         tvStatus.text = booking.status.uppercase()
         
