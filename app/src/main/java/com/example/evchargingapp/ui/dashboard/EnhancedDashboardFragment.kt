@@ -31,6 +31,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.example.evchargingapp.R
 import com.example.evchargingapp.data.api.*
 import com.example.evchargingapp.data.repository.ChargingStationRepository
+import com.example.evchargingapp.data.repository.BookingRepository
 import com.example.evchargingapp.ui.dashboard.adapter.ChargingStationAdapter
 import com.example.evchargingapp.ui.dashboard.adapter.UnifiedSearchAdapter
 import com.example.evchargingapp.ui.dashboard.adapter.LocationSearchResult
@@ -62,6 +63,7 @@ class EnhancedDashboardFragment : Fragment() {
     
     private lateinit var sessionManager: SessionManager
     private lateinit var chargingStationRepository: ChargingStationRepository
+    private lateinit var bookingRepository: BookingRepository
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var chargingStationAdapter: ChargingStationAdapter
     private lateinit var placesClient: PlacesClient
@@ -253,6 +255,10 @@ class EnhancedDashboardFragment : Fragment() {
         val authenticatedRetrofit = ApiConfig.getAuthenticatedRetrofit(requireContext())
         val apiService = authenticatedRetrofit.create(ChargingStationApiService::class.java)
         chargingStationRepository = ChargingStationRepository(apiService)
+        
+        // Initialize booking repository
+        val bookingApiService = authenticatedRetrofit.create(BookingApiService::class.java)
+        bookingRepository = BookingRepository(bookingApiService)
     }
     
     private fun setupViews(view: View) {
@@ -534,20 +540,45 @@ class EnhancedDashboardFragment : Fragment() {
     }
     
     private fun loadDashboardStats() {
-        // Use placeholder values since API endpoints were removed
-        // These can be replaced with actual data sources or removed entirely
-        tvPendingCount.text = "0"
-        tvApprovedCount.text = "0"
-        
-        Log.d(TAG, "Dashboard stats loaded with placeholder values")
-    }
-    
-    private fun loadIndividualStats() {
-        // Use placeholder values since API endpoints were removed
-        tvPendingCount.text = "0"
-        tvApprovedCount.text = "0"
-        
-        Log.d(TAG, "Individual stats loaded with placeholder values")
+        lifecycleScope.launch {
+            try {
+                Log.d(TAG, "Loading dashboard stats from booking API")
+                
+                // Fetch all user bookings
+                bookingRepository.getAllMyBookings()
+                    .onSuccess { bookings ->
+                        Log.d(TAG, "Loaded ${bookings.size} bookings for statistics")
+                        
+                        // Count bookings by status
+                        val pendingCount = bookings.count { it.status.equals("PENDING", ignoreCase = true) }
+                        val inProgressCount = bookings.count { 
+                            it.status.equals("APPROVED", ignoreCase = true) ||
+                            it.status.equals("IN_PROGRESS", ignoreCase = true) ||
+                            it.status.equals("ACTIVE", ignoreCase = true)
+                        }
+                        
+                        // Update UI on main thread
+                        tvPendingCount.text = pendingCount.toString()
+                        tvApprovedCount.text = inProgressCount.toString()
+                        
+                        Log.d(TAG, "Dashboard stats updated - Pending: $pendingCount, In Progress: $inProgressCount")
+                    }
+                    .onFailure { exception ->
+                        Log.e(TAG, "Failed to load dashboard stats", exception)
+                        // Fall back to placeholder values
+                        tvPendingCount.text = "0"
+                        tvApprovedCount.text = "0"
+                        context?.let { ctx ->
+                            Toast.makeText(ctx, "Failed to load booking statistics", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+            } catch (e: Exception) {
+                Log.e(TAG, "Exception loading dashboard stats", e)
+                // Fall back to placeholder values
+                tvPendingCount.text = "0"
+                tvApprovedCount.text = "0"
+            }
+        }
     }
     
     private fun loadNearbyStations(latitude: Double, longitude: Double) {
