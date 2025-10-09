@@ -28,6 +28,7 @@
         <activity android:name=".ui.auth.LoginActivity" android:exported="false" />
         <activity android:name=".ui.auth.RegisterActivity" android:exported="false" />
         <activity android:name=".ui.dashboard.ProfileActivity" android:exported="false" />
+        <activity android:name=".ui.dashboard.EditProfileActivity" android:exported="false" />
         <activity android:name=".ui.dashboard.ChargingStationDetailsActivity" android:exported="false" />
         
         <!-- Booking Activities -->

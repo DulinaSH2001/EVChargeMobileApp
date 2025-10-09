@@ -55,14 +55,22 @@ class AuthInterceptor(private val context: Context) : Interceptor {
             "/auth/login",
             "/auth/evowner/login", 
             "/auth/register",
-            "/EVOwner",  // Registration endpoint
-            "/EVOwner/user/",  // NIC validation endpoint
+            "/EVOwner",  // Registration endpoint (POST /EVOwner)
+            "/EVOwner/user/",  // NIC validation endpoint (GET /EVOwner/user/{nic})
             "login",     // Any URL containing 'login'
             "register"   // Any URL containing 'register'
         )
         
         val isAuthEndpoint = authEndpoints.any { endpoint ->
-            url.contains(endpoint, ignoreCase = true)
+            when (endpoint) {
+                "/EVOwner/user/" -> url.contains("/EVOwner/user/", ignoreCase = true)
+                "/EVOwner" -> {
+                    // Only match exact /EVOwner for registration, not /EVOwner/{nic} for profile
+                    val urlPath = url.substringAfter("/api").substringBefore("?")
+                    urlPath == "/EVOwner"
+                }
+                else -> url.contains(endpoint, ignoreCase = true)
+            }
         }
         
         // Debug logging

@@ -79,4 +79,11 @@
         <item name="android:textSize">11sp</item>
         <item name="android:fontFamily">sans-serif</item>
     </style>
+    
+    <!-- Switch Styles -->
+    <style name="Theme.EvChargingApp.Switch" parent="Widget.MaterialComponents.CompoundButton.Switch">
+        <item name="colorPrimary">@color/primary_blue</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorSurface">@color/card_background</item>
+    </style>
 </resources>

@@ -19,6 +19,8 @@ import com.example.evchargingapp.data.local.UserType
 import com.example.evchargingapp.data.repository.AuthRepository
 import com.example.evchargingapp.data.repository.AuthResult
 import com.example.evchargingapp.data.repository.NicValidationResult
+import com.example.evchargingapp.data.repository.EVOwnerRepository
+import com.example.evchargingapp.data.api.EVOwnerApiService
 import com.example.evchargingapp.utils.SessionManager
 import com.example.evchargingapp.utils.OfflineManager
 import kotlinx.coroutines.launch
@@ -40,10 +42,12 @@ class LoginActivity : AppCompatActivity() {
     
     // EV Owner two-step login state
     private var evOwnerValidatedEmail: String? = null
+    private var evOwnerValidatedNic: String? = null // Store the original NIC
     private var isNicValidated: Boolean = false
     
     private lateinit var sessionManager: SessionManager
     private lateinit var authRepository: AuthRepository
+    private lateinit var evOwnerRepository: EVOwnerRepository
     private lateinit var offlineManager: OfflineManager
     
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -72,6 +76,10 @@ class LoginActivity : AppCompatActivity() {
         // Initialize components
         sessionManager = SessionManager(this)
         authRepository = AuthRepository(this)
+        evOwnerRepository = EVOwnerRepository(
+            com.example.evchargingapp.utils.ApiConfig.getAuthenticatedRetrofit(this)
+                .create(com.example.evchargingapp.data.api.EVOwnerApiService::class.java)
+        )
         offlineManager = OfflineManager(this)
     }
     
@@ -96,6 +104,7 @@ class LoginActivity : AppCompatActivity() {
                 // Allow user to go back and change NIC
                 isNicValidated = false
                 evOwnerValidatedEmail = null
+                evOwnerValidatedNic = null
                 updateUIForUserType()
                 Toast.makeText(this, "Please enter your NIC again", Toast.LENGTH_SHORT).show()
             }
@@ -107,6 +116,7 @@ class LoginActivity : AppCompatActivity() {
         
         // Reset EV Owner two-step login state when switching user types
         evOwnerValidatedEmail = null
+        evOwnerValidatedNic = null
         isNicValidated = false
         
         updateUIForUserType()
@@ -228,6 +238,7 @@ class LoginActivity : AppCompatActivity() {
                 when (result) {
                     is NicValidationResult.Success -> {
                         evOwnerValidatedEmail = result.email
+                        evOwnerValidatedNic = nic // Store the original NIC
                         isNicValidated = true
                         updateUIForUserType()
                         Toast.makeText(this@LoginActivity, "NIC validated successfully. Please enter your password.", Toast.LENGTH_SHORT).show()
@@ -326,6 +337,11 @@ class LoginActivity : AppCompatActivity() {
             Toast.makeText(this, it, Toast.LENGTH_SHORT).show()
         }
         
+        // Fetch and save EV Owner profile if user is an EV Owner
+        if (!user.isStationOperator()) {
+            fetchEVOwnerProfile(user)
+        }
+        
         // Navigate based on user role
         val intent = if (user.isStationOperator()) {
             Intent(this, com.example.evchargingapp.ui.operator.OperatorDashboardActivity::class.java)
@@ -344,6 +360,33 @@ class LoginActivity : AppCompatActivity() {
         
         // Clear password field on failure
         passwordInput.text.clear()
+    }
+    
+    private fun fetchEVOwnerProfile(user: User) {
+        lifecycleScope.launch {
+            try {
+                // Use the original NIC that was entered during validation
+                val nic = evOwnerValidatedNic
+                if (nic == null) {
+                    Log.w("LoginActivity", "No validated NIC available for profile fetch")
+                    return@launch
+                }
+                
+                Log.d("LoginActivity", "Fetching EV Owner profile for NIC: $nic")
+                val result = evOwnerRepository.getEVOwnerByNIC(nic)
+                
+                result.onSuccess { evOwner ->
+                    Log.d("LoginActivity", "Successfully fetched EV Owner profile: ${evOwner.firstName} ${evOwner.lastName}")
+                    sessionManager.saveEVOwnerProfile(evOwner)
+                }.onFailure { exception ->
+                    Log.w("LoginActivity", "Failed to fetch EV Owner profile: ${exception.message}")
+                    // Don't show error to user as this is not critical for login flow
+                    // Profile can be fetched later from profile fragment
+                }
+            } catch (e: Exception) {
+                Log.e("LoginActivity", "Error fetching EV Owner profile: ${e.message}")
+            }
+        }
     }
     
     private fun setLoadingState(isLoading: Boolean) {

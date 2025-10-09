@@ -127,150 +127,9 @@
 
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Notifications -->
+            <!-- Dark Theme -->
             <com.google.android.material.card.MaterialCardView
-                android:id="@+id/card_notifications"
-                android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:layout_marginBottom="8dp"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="1dp"
-                app:cardBackgroundColor="@color/card_background"
-                android:clickable="true"
-                android:focusable="true"
-                app:rippleColor="@color/primary_blue_light">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:paddingHorizontal="16dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="🔔"
-                        android:textSize="20sp"
-                        android:layout_marginEnd="16dp" />
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Notifications"
-                        android:textSize="16sp"
-                        android:textColor="@color/text_primary"
-                        android:fontFamily="sans-serif" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="→"
-                        android:textSize="16sp"
-                        android:textColor="@color/text_secondary" />
-
-                </LinearLayout>
-
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- Security -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/card_security"
-                android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:layout_marginBottom="8dp"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="1dp"
-                app:cardBackgroundColor="@color/card_background"
-                android:clickable="true"
-                android:focusable="true"
-                app:rippleColor="@color/primary_blue_light">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:paddingHorizontal="16dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="🔒"
-                        android:textSize="20sp"
-                        android:layout_marginEnd="16dp" />
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Security"
-                        android:textSize="16sp"
-                        android:textColor="@color/text_primary"
-                        android:fontFamily="sans-serif" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="→"
-                        android:textSize="16sp"
-                        android:textColor="@color/text_secondary" />
-
-                </LinearLayout>
-
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- Support -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/card_support"
-                android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:layout_marginBottom="8dp"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="1dp"
-                app:cardBackgroundColor="@color/card_background"
-                android:clickable="true"
-                android:focusable="true"
-                app:rippleColor="@color/primary_blue_light">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:paddingHorizontal="16dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="❓"
-                        android:textSize="20sp"
-                        android:layout_marginEnd="16dp" />
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Support"
-                        android:textSize="16sp"
-                        android:textColor="@color/text_primary"
-                        android:fontFamily="sans-serif" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="→"
-                        android:textSize="16sp"
-                        android:textColor="@color/text_secondary" />
-
-                </LinearLayout>
-
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- About -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/card_about"
+                android:id="@+id/card_dark_theme"
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:layout_marginBottom="24dp"
@@ -291,7 +150,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="ℹ️"
+                        android:text="🌙"
                         android:textSize="20sp"
                         android:layout_marginEnd="16dp" />
 
@@ -299,17 +158,16 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="About"
+                        android:text="Dark Theme"
                         android:textSize="16sp"
                         android:textColor="@color/text_primary"
                         android:fontFamily="sans-serif" />
 
-                    <TextView
+                    <com.google.android.material.switchmaterial.SwitchMaterial
+                        android:id="@+id/switch_dark_theme"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="→"
-                        android:textSize="16sp"
-                        android:textColor="@color/text_secondary" />
+                        android:theme="@style/Theme.EvChargingApp.Switch" />
 
                 </LinearLayout>
 

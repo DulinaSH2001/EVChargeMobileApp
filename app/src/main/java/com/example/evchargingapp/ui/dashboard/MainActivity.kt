@@ -8,6 +8,7 @@ import android.view.WindowManager
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
@@ -25,6 +26,11 @@ class MainActivity : AppCompatActivity() {
     private lateinit var bottomNavigation: BottomNavigationView
     
     override fun onCreate(savedInstanceState: Bundle?) {
+        sessionManager = SessionManager(this)
+        
+        // Apply saved dark theme preference
+        applyDarkThemePreference()
+        
         super.onCreate(savedInstanceState)
         
         setContentView(R.layout.activity_main)
@@ -235,8 +241,17 @@ class MainActivity : AppCompatActivity() {
         ).show()
     }
     
-    // Method to navigate programmatically with animation
-    fun navigateToFragment(fragment: Fragment, animationType: AnimationType = AnimationType.FADE) {
-        loadFragmentWithAnimation(fragment, animationType)
+    private fun applyDarkThemePreference() {
+        val isDarkMode = sessionManager.isDarkThemeEnabled()
+        val nightMode = if (isDarkMode) {
+            AppCompatDelegate.MODE_NIGHT_YES
+        } else {
+            AppCompatDelegate.MODE_NIGHT_NO
+        }
+        
+        // Only apply if it's different from current mode
+        if (AppCompatDelegate.getDefaultNightMode() != nightMode) {
+            AppCompatDelegate.setDefaultNightMode(nightMode)
+        }
     }
 }

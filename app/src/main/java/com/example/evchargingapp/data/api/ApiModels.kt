@@ -400,3 +400,44 @@ data class BookingSearchRequest(
     @SerializedName("chargingStationId")
     val chargingStationId: String? = null
 )
+
+// EV Owner Profile Models
+data class EVOwnerDto(
+    @SerializedName("id")
+    val id: String? = null,
+    @SerializedName("nic")
+    val nic: String,
+    @SerializedName("firstName")
+    val firstName: String,
+    @SerializedName("lastName")
+    val lastName: String,
+    @SerializedName("email")
+    val email: String,
+    @SerializedName("phone")
+    val phone: String,
+    @SerializedName("address")
+    val address: String? = null,
+    @SerializedName("dateOfBirth")
+    val dateOfBirth: String? = null,
+    @SerializedName("isActive")
+    val isActive: Boolean = true,
+    @SerializedName("createdAt")
+    val createdAt: String? = null,
+    @SerializedName("updatedAt")
+    val updatedAt: String? = null
+)
+
+data class UpdateEVOwnerRequest(
+    @SerializedName("firstName")
+    val firstName: String,
+    @SerializedName("lastName")
+    val lastName: String,
+    @SerializedName("email")
+    val email: String,
+    @SerializedName("phone")
+    val phone: String,
+    @SerializedName("address")
+    val address: String? = null,
+    @SerializedName("dateOfBirth")
+    val dateOfBirth: String? = null
+)

@@ -70,6 +70,7 @@ class EditReservationActivity : AppCompatActivity(), OnMapReadyCallback {
     // Data
     private var bookingId: String? = null
     private var booking: BookingDto? = null
+    private var chargingStation: ChargingStationDto? = null
     private var selectedDate: Calendar? = null
     private var selectedTime: Calendar? = null
     private var selectedDuration: Int = 60
@@ -151,8 +152,12 @@ class EditReservationActivity : AppCompatActivity(), OnMapReadyCallback {
             } else {
                 mapFragment.view?.visibility = View.VISIBLE
                 btnViewMap.text = "Hide Map"
-                // Refresh map if needed
-                mapFragment.getMapAsync(this)
+                // Only update map if we have station data and map is ready
+                chargingStation?.let { station ->
+                    googleMap?.let { map ->
+                        updateMapWithStationCoordinates(station)
+                    }
+                }
             }
         }
     }
@@ -164,11 +169,8 @@ class EditReservationActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private fun generateQRCode() {
         booking?.let { booking ->
-            val qrContent = "Booking ID: ${booking.id}\n" +
-                    "Station: ${booking.chargingStationName}\n" +
-                    "Date: ${booking.reservationDateTime}\n" +
-                    "Duration: ${booking.duration} minutes\n" +
-                    "Slot: ${booking.slotNumber}"
+            // Generate QR code with only booking ID as requested
+            val qrContent = booking.id
             
             try {
                 val writer = MultiFormatWriter()
@@ -194,24 +196,22 @@ class EditReservationActivity : AppCompatActivity(), OnMapReadyCallback {
     override fun onMapReady(googleMap: GoogleMap) {
         this.googleMap = googleMap
         
-        booking?.let { booking ->
-            val coordinates = parseLocationCoordinates(booking.chargingStationLocation ?: "")
-            coordinates?.let { (lat, lng) ->
-                val location = LatLng(lat, lng)
-                stationLatLng = location
-                
-                googleMap.addMarker(
-                    MarkerOptions()
-                        .position(location)
-                        .title(booking.chargingStationName ?: "Charging Station")
-                        .snippet(booking.getParsedAddress())
-                )
-                googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(location, 15f))
-                
-                // Initially hide the map
-                mapFragment.view?.visibility = View.GONE
-                btnViewMap.text = "Show Map"
-            }
+        // Setup map UI and settings
+        googleMap.uiSettings.isZoomControlsEnabled = true
+        googleMap.uiSettings.isMapToolbarEnabled = true
+        googleMap.uiSettings.isMyLocationButtonEnabled = false
+        googleMap.uiSettings.isCompassEnabled = true
+        
+        // Set map type to normal
+        googleMap.mapType = GoogleMap.MAP_TYPE_NORMAL
+        
+        // Initially hide the map
+        mapFragment.view?.visibility = View.GONE
+        btnViewMap.text = "Show Map"
+        
+        // If we already have charging station data, update the map
+        chargingStation?.let { station ->
+            updateMapWithStationCoordinates(station)
         }
     }
 
@@ -233,7 +233,7 @@ class EditReservationActivity : AppCompatActivity(), OnMapReadyCallback {
     private fun populateFields() {
         booking?.let { booking ->
             tvStationName.text = booking.chargingStationName ?: "Unknown Station"
-            tvStationLocation.text = booking.chargingStationLocation ?: "Location not available"
+            tvStationLocation.text = booking.getParsedAddress()
             tvBookingId.text = "Booking ID: ${booking.id}"
 
             // Parse and populate date/time
@@ -262,6 +262,42 @@ class EditReservationActivity : AppCompatActivity(), OnMapReadyCallback {
 
             // Set notes
             etNotes.setText(booking.notes ?: "")
+            
+            // Fetch charging station details for proper coordinates and slot count
+            fetchChargingStationDetails(booking.chargingStationId)
+        }
+    }
+    
+    private fun fetchChargingStationDetails(stationId: String) {
+        Log.d(TAG, "Fetching charging station details for ID: $stationId")
+        lifecycleScope.launch {
+            try {
+                val result = chargingStationRepository.getStationById(stationId)
+                result.onSuccess { station: ChargingStationDto ->
+                    Log.d(TAG, "Successfully fetched station: ${station.name}")
+                    Log.d(TAG, "Station location: ${station.location}")
+                    Log.d(TAG, "Station coordinates - lat: ${station.getCoordinateLatitude()}, lng: ${station.getCoordinateLongitude()}")
+                    
+                    chargingStation = station
+                    
+                    // Update location text with clean address from station data
+                    tvStationLocation.text = station.getParsedAddress()
+                    
+                    // Update slot spinner with correct slot count
+                    setupSlotNumberSpinnerWithStationData(station.totalSlots)
+                    
+                    // Update map with proper coordinates
+                    updateMapWithStationCoordinates(station)
+                    
+                }.onFailure { exception: Throwable ->
+                    Log.e(TAG, "Failed to fetch charging station details", exception)
+                    // Continue with basic setup if station fetch fails
+                    setupSlotNumberSpinner()
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Exception while fetching station details", e)
+                setupSlotNumberSpinner()
+            }
         }
     }
 
@@ -278,13 +314,74 @@ class EditReservationActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun setupSlotNumberSpinner() {
-        // For editing, we'll allow selecting from slots 1-10 (you can adjust this based on station info)
+        // Default fallback - allow selecting from slots 1-10
         val slotNumbers = Array(10) { "Slot ${it + 1}" }
         val adapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, slotNumbers)
         spinnerSlotNumber.setAdapter(adapter)
 
         spinnerSlotNumber.setOnItemClickListener { _, _, position, _ ->
             selectedSlotNumber = position + 1
+        }
+    }
+    
+    private fun setupSlotNumberSpinnerWithStationData(totalSlots: Int) {
+        // Use actual slot count from charging station
+        val slotNumbers = Array(totalSlots) { "Slot ${it + 1}" }
+        val adapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, slotNumbers)
+        spinnerSlotNumber.setAdapter(adapter)
+
+        spinnerSlotNumber.setOnItemClickListener { _, _, position, _ ->
+            selectedSlotNumber = position + 1
+        }
+        
+        // Re-set the current selection if it's still valid
+        if (selectedSlotNumber <= totalSlots) {
+            setSlotSpinnerSelection(selectedSlotNumber)
+        }
+    }
+    
+    private fun updateMapWithStationCoordinates(station: ChargingStationDto) {
+        googleMap?.let { map ->
+            Log.d(TAG, "Updating map for station: ${station.name}")
+            
+            // Clear existing markers
+            map.clear()
+            
+            val lat = station.getCoordinateLatitude()
+            val lng = station.getCoordinateLongitude()
+            
+            if (lat != null && lng != null) {
+                Log.d(TAG, "Setting map position to: $lat, $lng")
+                val position = LatLng(lat, lng)
+                stationLatLng = position
+                
+                // Add marker with custom styling
+                map.addMarker(
+                    MarkerOptions()
+                        .position(position)
+                        .title(station.name)
+                        .snippet("${station.getParsedAddress()} • ${station.type}")
+                )
+                
+                // Animate camera to station location with proper zoom
+                map.animateCamera(
+                    CameraUpdateFactory.newLatLngZoom(position, 16f), 
+                    1500, // 1.5 seconds animation
+                    object : GoogleMap.CancelableCallback {
+                        override fun onFinish() {
+                            Log.d(TAG, "Map camera animation completed")
+                        }
+                        override fun onCancel() {
+                            Log.d(TAG, "Map camera animation cancelled")
+                        }
+                    }
+                )
+            } else {
+                Log.w(TAG, "Could not parse coordinates from location: ${station.location}")
+                Toast.makeText(this, "Location coordinates not available", Toast.LENGTH_SHORT).show()
+            }
+        } ?: run {
+            Log.w(TAG, "Google Map not initialized yet")
         }
     }
 
@@ -298,7 +395,9 @@ class EditReservationActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun setSlotSpinnerSelection(slotNumber: Int) {
-        if (slotNumber <= 10) {
+        // Check if the slot number is valid for current station
+        val maxSlots = chargingStation?.totalSlots ?: 10
+        if (slotNumber <= maxSlots) {
             spinnerSlotNumber.setText("Slot $slotNumber", false)
         }
     }

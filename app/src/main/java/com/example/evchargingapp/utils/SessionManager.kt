@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import com.example.evchargingapp.data.local.User
 import com.example.evchargingapp.data.local.UserType
 import com.example.evchargingapp.data.api.UserRole
+import com.example.evchargingapp.data.api.EVOwnerDto
 
 class SessionManager(context: Context) {
     
@@ -23,6 +24,12 @@ class SessionManager(context: Context) {
         private const val KEY_LOGIN_TIME = "login_time"
         private const val KEY_SYNCED_WITH_SERVER = "synced_with_server"
         private const val KEY_TOKEN = "auth_token" // Store JWT token
+        // EV Owner Profile Data
+        private const val KEY_FIRST_NAME = "first_name"
+        private const val KEY_LAST_NAME = "last_name"
+        private const val KEY_ADDRESS = "address"
+        private const val KEY_DATE_OF_BIRTH = "date_of_birth"
+        private const val KEY_DARK_THEME = "dark_theme"
         // Deprecated - keeping for backward compatibility
         private const val KEY_NIC = "nic"
         private const val KEY_OPERATOR = "operator"
@@ -97,6 +104,9 @@ class SessionManager(context: Context) {
     // Backward compatibility
     @Deprecated("Use getEmail instead")
     fun getNic(): String? = getEmail()
+    
+    // Get actual NIC number for API calls
+    fun getActualNic(): String? = prefs.getString(KEY_NIC, null)
     
     fun getUserName(): String = prefs.getString(KEY_NAME, "User") ?: "User"
     
@@ -176,6 +186,68 @@ class SessionManager(context: Context) {
         editor.putBoolean(KEY_SYNCED_WITH_SERVER, isSynced)
         editor.apply()
     }
+    
+    // EV Owner Profile Management
+    fun saveEVOwnerProfile(evOwner: EVOwnerDto) {
+        editor.apply {
+            putString(KEY_ID, evOwner.id)
+            putString(KEY_EMAIL, evOwner.email)
+            putString(KEY_FIRST_NAME, evOwner.firstName)
+            putString(KEY_LAST_NAME, evOwner.lastName)
+            putString(KEY_NAME, "${evOwner.firstName} ${evOwner.lastName}")
+            putString(KEY_PHONE, evOwner.phone)
+            putString(KEY_ADDRESS, evOwner.address ?: "")
+            putString(KEY_DATE_OF_BIRTH, evOwner.dateOfBirth ?: "")
+            putBoolean(KEY_IS_ACTIVE, evOwner.isActive)
+            putBoolean(KEY_SYNCED_WITH_SERVER, true)
+            // For backward compatibility, use NIC as identifier
+            putString(KEY_NIC, evOwner.nic)
+            apply()
+        }
+    }
+    
+    fun getEVOwnerProfile(): EVOwnerDto? {
+        if (!isLoggedIn() || !isEvOwner()) return null
+        
+        val id = prefs.getString(KEY_ID, null) ?: return null
+        val nic = prefs.getString(KEY_NIC, null) ?: return null
+        val email = prefs.getString(KEY_EMAIL, null) ?: return null
+        val firstName = prefs.getString(KEY_FIRST_NAME, null) ?: return null
+        val lastName = prefs.getString(KEY_LAST_NAME, null) ?: return null
+        val phone = prefs.getString(KEY_PHONE, null) ?: return null
+        val address = prefs.getString(KEY_ADDRESS, "") ?: ""
+        val dateOfBirth = prefs.getString(KEY_DATE_OF_BIRTH, "") ?: ""
+        val isActive = prefs.getBoolean(KEY_IS_ACTIVE, true)
+        
+        return EVOwnerDto(
+            id = id,
+            nic = nic,
+            firstName = firstName,
+            lastName = lastName,
+            email = email,
+            phone = phone,
+            address = address,
+            dateOfBirth = dateOfBirth.takeIf { it.isNotEmpty() },
+            isActive = isActive
+        )
+    }
+    
+    fun updateEVOwnerProfile(evOwner: EVOwnerDto) {
+        saveEVOwnerProfile(evOwner)
+    }
+    
+    fun getFirstName(): String = prefs.getString(KEY_FIRST_NAME, "") ?: ""
+    
+    fun getLastName(): String = prefs.getString(KEY_LAST_NAME, "") ?: ""
+    
+    // Dark Theme Preferences
+    fun saveDarkThemePreference(isDarkMode: Boolean) {
+        editor.putBoolean(KEY_DARK_THEME, isDarkMode).apply()
+    }
+    
+    fun isDarkThemeEnabled(): Boolean = prefs.getBoolean(KEY_DARK_THEME, false)
+    
+    fun getAddress(): String = prefs.getString(KEY_ADDRESS, "") ?: ""
     
     fun logout() {
         editor.clear()
