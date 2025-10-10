@@ -98,11 +98,12 @@ class BookingRepository(private val apiService: BookingApiService) {
         chargingStationId: String,
         slotNumber: Int,
         reservationDateTime: String,
-        duration: Int
+        duration: Int,
+        excludeBookingId: String? = null
     ): Result<Boolean> {
         return try {
             Log.d("BookingRepository", "Validating time slot for station: $chargingStationId")
-            val response = apiService.validateTimeSlot(chargingStationId, slotNumber, reservationDateTime, duration)
+            val response = apiService.validateTimeSlot(chargingStationId, slotNumber, reservationDateTime, duration, excludeBookingId)
             handleApiResponse(response)
         } catch (e: Exception) {
             Log.e("BookingRepository", "Error validating time slot", e)

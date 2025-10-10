@@ -6,10 +6,13 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.evchargingapp.R
 import com.example.evchargingapp.data.api.*
@@ -70,6 +73,7 @@ class NewReservationActivity : AppCompatActivity() {
     private lateinit var spinnerSlotNumber: Spinner
     private lateinit var etNotes: TextInputEditText
     private lateinit var tilNotes: TextInputLayout
+    private lateinit var tvValidationMessage: TextView
     private lateinit var btnCreateBooking: MaterialButton
     private lateinit var progressBar: ProgressBar
     private lateinit var qrCodeCard: MaterialCardView
@@ -85,6 +89,12 @@ class NewReservationActivity : AppCompatActivity() {
     private var selectedTime: Calendar? = null
     private var selectedDuration: Int = 60 // Default 60 minutes
     private var selectedSlotNumber: Int = 1
+    
+    // Validation state
+    private var isValidatingTimeSlot = false
+    private var isTimeSlotValid = false
+    private var validationHandler = Handler(Looper.getMainLooper())
+    private var validationRunnable: Runnable? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -134,6 +144,7 @@ class NewReservationActivity : AppCompatActivity() {
         spinnerSlotNumber = findViewById(R.id.spinner_slot_number)
         etNotes = findViewById(R.id.et_notes)
         tilNotes = findViewById(R.id.til_notes)
+        tvValidationMessage = findViewById(R.id.tv_validation_message)
         btnCreateBooking = findViewById(R.id.btn_create_booking)
         progressBar = findViewById(R.id.progress_bar)
         qrCodeCard = findViewById(R.id.qr_code_card)
@@ -154,8 +165,9 @@ class NewReservationActivity : AppCompatActivity() {
         btnSelectTime.setOnClickListener { showTimePicker() }
         btnCreateBooking.setOnClickListener { createBooking() }
 
-        // Initially hide QR code card
+        // Initially hide QR code card and create booking button
         qrCodeCard.visibility = View.GONE
+        btnCreateBooking.visibility = View.GONE
     }
 
     private fun populateStationInfo() {
@@ -177,6 +189,7 @@ class NewReservationActivity : AppCompatActivity() {
         spinnerDuration.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 selectedDuration = durationValues[position]
+                validateTimeSlotIfReady()
             }
 
             override fun onNothingSelected(parent: AdapterView<*>?) {
@@ -194,6 +207,7 @@ class NewReservationActivity : AppCompatActivity() {
         spinnerSlotNumber.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 selectedSlotNumber = position + 1
+                validateTimeSlotIfReady()
             }
 
             override fun onNothingSelected(parent: AdapterView<*>?) {
@@ -211,6 +225,7 @@ class NewReservationActivity : AppCompatActivity() {
                     set(year, month, dayOfMonth)
                 }
                 updateDateButton()
+                validateTimeSlotIfReady()
             },
             calendar.get(Calendar.YEAR),
             calendar.get(Calendar.MONTH),
@@ -232,6 +247,7 @@ class NewReservationActivity : AppCompatActivity() {
                     set(Calendar.MINUTE, minute)
                 }
                 updateTimeButton()
+                validateTimeSlotIfReady()
             },
             calendar.get(Calendar.HOUR_OF_DAY),
             calendar.get(Calendar.MINUTE),
@@ -254,46 +270,197 @@ class NewReservationActivity : AppCompatActivity() {
         }
     }
 
-    private fun createBooking() {
-        if (!validateInputs()) {
-            return
+    private fun validateTimeSlotIfReady() {
+        // Cancel any previous validation
+        validationRunnable?.let { validationHandler.removeCallbacks(it) }
+        
+        // Check if all required fields are selected
+        if (selectedDate != null && selectedTime != null && stationId != null) {
+            
+            // Check basic validation first
+            val selectedDateTime = combineCalendar()
+            val now = Calendar.getInstance()
+            
+            if (selectedDateTime.before(now)) {
+                resetValidationState()
+                btnCreateBooking.visibility = View.GONE
+                tvValidationMessage.text = "✗ Please select a future date and time"
+                tvValidationMessage.backgroundTintList = androidx.core.content.ContextCompat.getColorStateList(this, android.R.color.holo_red_dark)
+                return
+            }
+            
+            // Check if booking is at least 30 minutes from now
+            val minimumBookingTime = Calendar.getInstance().apply {
+                add(Calendar.MINUTE, 30)
+            }
+            
+            if (selectedDateTime.before(minimumBookingTime)) {
+                resetValidationState()
+                btnCreateBooking.visibility = View.GONE
+                tvValidationMessage.text = "✗ Bookings must be made at least 30 minutes in advance"
+                tvValidationMessage.backgroundTintList = androidx.core.content.ContextCompat.getColorStateList(this, android.R.color.holo_red_dark)
+                return
+            }
+            
+            // Debounce the validation to avoid too many API calls
+            validationRunnable = Runnable {
+                performTimeSlotValidation()
+            }
+            validationHandler.postDelayed(validationRunnable!!, 1000) // Wait 1 second before validating
+        } else {
+            resetValidationState()
+            btnCreateBooking.visibility = View.GONE
         }
-
+    }
+    
+    private fun performTimeSlotValidation() {
+        if (isValidatingTimeSlot) {
+            return // Already validating
+        }
+        
+        isValidatingTimeSlot = true
+        btnCreateBooking.isEnabled = false
+        btnCreateBooking.text = "Validating..."
+        
+        // Update validation message
+        tvValidationMessage.text = "Validating time slot availability..."
+        tvValidationMessage.backgroundTintList = androidx.core.content.ContextCompat.getColorStateList(this, R.color.warning_orange)
+        
         val reservationDateTime = combineDateTime()
         
-        showLoading(true)
-        
-        // First validate the time slot with the server
         lifecycleScope.launch {
             try {
-                val isSlotValid = bookingRepository.validateTimeSlot(
+                val result = bookingRepository.validateTimeSlot(
                     chargingStationId = stationId!!,
                     slotNumber = selectedSlotNumber,
                     reservationDateTime = reservationDateTime,
                     duration = selectedDuration
                 )
                 
-                isSlotValid.onSuccess { isValid ->
+                result.onSuccess { isValid ->
+                    isValidatingTimeSlot = false
+                    isTimeSlotValid = isValid
+                    
                     if (isValid) {
-                        // Time slot is valid, proceed with booking creation
-                        createBookingRequest(reservationDateTime)
+                        // Time slot is valid - show create booking button
+                        tvValidationMessage.text = "✓ Time slot is available!"
+                        tvValidationMessage.backgroundTintList = androidx.core.content.ContextCompat.getColorStateList(this@NewReservationActivity, android.R.color.holo_green_dark)
+                        
+                        btnCreateBooking.visibility = View.VISIBLE
+                        btnCreateBooking.isEnabled = true
+                        btnCreateBooking.text = "Create Booking"
+                        btnCreateBooking.setBackgroundColor(
+                            androidx.core.content.ContextCompat.getColor(this@NewReservationActivity, R.color.primary_blue)
+                        )
                     } else {
-                        showLoading(false)
-                        Toast.makeText(
-                            this@NewReservationActivity,
-                            "This time slot is no longer available. Please select a different time.",
-                            Toast.LENGTH_LONG
-                        ).show()
+                        // Time slot is not available
+                        showTimeSlotNotAvailable()
                     }
                 }.onFailure { exception ->
-                    Log.w(TAG, "Could not validate time slot, proceeding anyway", exception)
-                    // If validation fails, we'll still try to create the booking
-                    // The server will reject it if there's a conflict
-                    createBookingRequest(reservationDateTime)
+                    Log.e(TAG, "Error validating time slot", exception)
+                    isValidatingTimeSlot = false
+                    // On validation error, allow user to proceed but warn them
+                    tvValidationMessage.text = "⚠ Could not validate time slot. You can still try to create the booking."
+                    tvValidationMessage.backgroundTintList = androidx.core.content.ContextCompat.getColorStateList(this@NewReservationActivity, R.color.warning_orange)
+                    
+                    btnCreateBooking.visibility = View.VISIBLE
+                    btnCreateBooking.isEnabled = true
+                    btnCreateBooking.text = "Create Booking (Validation Failed)"
                 }
             } catch (e: Exception) {
-                Log.w(TAG, "Error during slot validation, proceeding with booking", e)
-                createBookingRequest(reservationDateTime)
+                Log.e(TAG, "Exception during validation", e)
+                isValidatingTimeSlot = false
+                
+                tvValidationMessage.text = "⚠ Validation error. You can still try to create the booking."
+                tvValidationMessage.backgroundTintList = androidx.core.content.ContextCompat.getColorStateList(this@NewReservationActivity, R.color.warning_orange)
+                
+                btnCreateBooking.visibility = View.VISIBLE
+                btnCreateBooking.isEnabled = true
+                btnCreateBooking.text = "Create Booking"
+            }
+        }
+    }
+    
+    private fun showTimeSlotNotAvailable() {
+        btnCreateBooking.visibility = View.GONE
+        
+        tvValidationMessage.text = "✗ This time slot is not available. Please select a different date, time, duration, or slot."
+        tvValidationMessage.backgroundTintList = androidx.core.content.ContextCompat.getColorStateList(this, android.R.color.holo_red_dark)
+        
+        // Reset selections to allow user to choose again
+        resetSelections()
+    }
+    
+    private fun resetSelections() {
+        // Reset UI to initial state
+        selectedDate = null
+        selectedTime = null
+        tvSelectedDate.text = "Choose a date"
+        tvSelectedTime.text = "Choose a time"
+        
+        // Reset spinners to default values
+        spinnerDuration.setSelection(1) // 60 minutes
+        spinnerSlotNumber.setSelection(0) // Slot 1
+        
+        resetValidationState()
+        
+        // Show a helpful message
+        Toast.makeText(this, "Please select new date and time", Toast.LENGTH_SHORT).show()
+    }
+    
+    private fun resetValidationState() {
+        isValidatingTimeSlot = false
+        isTimeSlotValid = false
+        btnCreateBooking.text = "Create Booking"
+        btnCreateBooking.setBackgroundColor(
+            androidx.core.content.ContextCompat.getColor(this, R.color.primary_blue)
+        )
+        tvValidationMessage.text = "Select date, time, duration, and slot to validate availability"
+        tvValidationMessage.backgroundTintList = androidx.core.content.ContextCompat.getColorStateList(this, R.color.primary_blue)
+    }
+
+    private fun createBooking() {
+        if (!validateInputs()) {
+            return
+        }
+
+        // If we have already validated and it's valid, proceed directly
+        if (isTimeSlotValid) {
+            val reservationDateTime = combineDateTime()
+            createBookingRequest(reservationDateTime)
+        } else {
+            // Re-validate one more time before creating booking
+            val reservationDateTime = combineDateTime()
+            
+            showLoading(true)
+            
+            lifecycleScope.launch {
+                try {
+                    val isSlotValid = bookingRepository.validateTimeSlot(
+                        chargingStationId = stationId!!,
+                        slotNumber = selectedSlotNumber,
+                        reservationDateTime = reservationDateTime,
+                        duration = selectedDuration
+                    )
+                    
+                    isSlotValid.onSuccess { isValid ->
+                        if (isValid) {
+                            // Time slot is valid, proceed with booking creation
+                            createBookingRequest(reservationDateTime)
+                        } else {
+                            showLoading(false)
+                            showTimeSlotNotAvailable()
+                        }
+                    }.onFailure { exception ->
+                        Log.w(TAG, "Could not validate time slot, proceeding anyway", exception)
+                        // If validation fails, we'll still try to create the booking
+                        // The server will reject it if there's a conflict
+                        createBookingRequest(reservationDateTime)
+                    }
+                } catch (e: Exception) {
+                    Log.w(TAG, "Error during slot validation, proceeding with booking", e)
+                    createBookingRequest(reservationDateTime)
+                }
             }
         }
     }
