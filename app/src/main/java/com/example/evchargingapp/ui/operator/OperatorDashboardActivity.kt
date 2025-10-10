@@ -10,6 +10,7 @@ import androidx.lifecycle.lifecycleScope
 import com.example.evchargingapp.R
 import com.example.evchargingapp.data.api.*
 import com.example.evchargingapp.data.repository.OperatorRepository
+import com.example.evchargingapp.data.repository.ScannedBookingRepository
 import com.example.evchargingapp.ui.auth.LoginActivity
 import com.example.evchargingapp.utils.SessionManager
 import com.google.android.material.button.MaterialButton
@@ -21,11 +22,13 @@ class OperatorDashboardActivity : AppCompatActivity() {
     
     private lateinit var sessionManager: SessionManager
     private lateinit var operatorRepository: OperatorRepository
+    private lateinit var scannedBookingRepository: ScannedBookingRepository
     
     // UI Components
     private lateinit var tvWelcome: TextView
     private lateinit var tvOperatorEmail: TextView
     private lateinit var btnScanQR: MaterialButton
+    private lateinit var btnMyScannedBookings: MaterialButton
     private lateinit var btnProfile: MaterialButton
     private lateinit var btnLogout: MaterialButton
     private lateinit var progressBar: ProgressBar
@@ -40,6 +43,7 @@ class OperatorDashboardActivity : AppCompatActivity() {
         
         sessionManager = SessionManager(this)
         operatorRepository = OperatorRepository(this)
+        scannedBookingRepository = ScannedBookingRepository(this)
         
         // Check if user is logged in and is an operator
         if (!sessionManager.isLoggedIn() || sessionManager.getCurrentUser()?.isStationOperator() != true) {
@@ -56,6 +60,7 @@ class OperatorDashboardActivity : AppCompatActivity() {
         tvWelcome = findViewById(R.id.tv_welcome)
         tvOperatorEmail = findViewById(R.id.tv_operator_email)
         btnScanQR = findViewById(R.id.btn_scan_qr)
+        btnMyScannedBookings = findViewById(R.id.btn_my_scanned_bookings)
         btnProfile = findViewById(R.id.btn_profile)
         btnLogout = findViewById(R.id.btn_logout)
         progressBar = findViewById(R.id.progress_bar)
@@ -70,6 +75,10 @@ class OperatorDashboardActivity : AppCompatActivity() {
     private fun setupClickListeners() {
         btnScanQR.setOnClickListener {
             startQRScanner()
+        }
+        
+        btnMyScannedBookings.setOnClickListener {
+            openScannedBookings()
         }
         
         btnProfile.setOnClickListener {
@@ -110,10 +119,18 @@ class OperatorDashboardActivity : AppCompatActivity() {
     private fun processQRCode(qrCode: String) {
         setLoadingState(true)
         lifecycleScope.launch {
-            when (val result = operatorRepository.getBookingDetails(qrCode)) {
+            when (val result = operatorRepository.scanQRAndStartBooking(qrCode)) {
+                is OperatorResult.BookingFoundWithDto -> {
+                    currentBooking = result.booking
+                    showToast("QR scanned successfully! Booking is now in progress.")
+                    // The scanQRAndStartBooking method already handles:
+                    // 1. Status update to InProgress
+                    // 2. Saving to local database
+                    // No additional calls needed!
+                }
                 is OperatorResult.BookingFound -> {
                     currentBooking = result.booking
-                    showBookingDetails(result.booking)
+                    showToast("QR scanned successfully! Booking is now in progress.")
                 }
                 is OperatorResult.Failure -> {
                     showToast("Error: ${result.error}")
@@ -135,6 +152,11 @@ class OperatorDashboardActivity : AppCompatActivity() {
     
     private fun openProfile() {
         val intent = Intent(this, OperatorProfileActivity::class.java)
+        startActivity(intent)
+    }
+    
+    private fun openScannedBookings() {
+        val intent = Intent(this, OperatorScannedBookingsActivity::class.java)
         startActivity(intent)
     }
     

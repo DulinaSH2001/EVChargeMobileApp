@@ -40,6 +40,7 @@
         <activity android:name=".ui.operator.OperatorDashboardActivity" android:exported="false" />
         <activity android:name=".ui.operator.BookingDetailsActivity" android:exported="false" />
         <activity android:name=".ui.operator.OperatorProfileActivity" android:exported="false" />
+        <activity android:name=".ui.operator.OperatorScannedBookingsActivity" android:exported="false" />
         
         <!-- Google Maps API Key -->
         <meta-data

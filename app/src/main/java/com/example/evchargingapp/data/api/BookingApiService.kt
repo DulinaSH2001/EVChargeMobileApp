@@ -49,4 +49,11 @@ interface BookingApiService {
         @Query("reservationDateTime") reservationDateTime: String,
         @Query("duration") duration: Int
     ): Response<ApiResponse<Boolean>>
+    
+    // Operator booking status update endpoint
+    @PATCH("Booking/{id}/status")
+    suspend fun updateBookingStatus(
+        @Path("id") bookingId: String,
+        @Body request: BookingStatusUpdateRequest
+    ): Response<ApiResponse<BookingDto>>
 }

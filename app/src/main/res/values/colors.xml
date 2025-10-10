@@ -23,6 +23,7 @@
     <!-- Text Colors -->
     <color name="text_primary">#1A1A1A</color>
     <color name="text_secondary">#6B7280</color>
+    <color name="text_tertiary">#9CA3AF</color>
     <color name="text_hint">#9CA3AF</color>
     <color name="text_white">#FFFFFF</color>
     
@@ -48,9 +49,17 @@
     <color name="status_cancelled_text">#C62828</color>
     <color name="status_completed_text">#00695C</color>
     
+    <!-- Status Background Colors -->
+    <color name="status_pending_background">#FFF3E0</color>
+    <color name="status_confirmed_background">#E8F5E8</color>
+    <color name="status_inprogress_background">#E3F2FD</color>
+    <color name="status_cancelled_background">#FFEBEE</color>
+    <color name="status_completed_background">#E0F2F1</color>
+    
     <!-- Utility Colors -->
     <color name="transparent">#00000000</color>
     <color name="shadow_light">#0A000000</color>
+    <color name="overlay_dark">#66000000</color>
     
     <!-- Legacy Colors (for compatibility) -->
     <color name="primary_green">@color/primary_blue</color>

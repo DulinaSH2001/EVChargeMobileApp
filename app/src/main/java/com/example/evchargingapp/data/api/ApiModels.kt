@@ -231,8 +231,10 @@ data class OperatorProfileUpdateRequest(
 // Result classes for operator operations
 sealed class OperatorResult {
     data class BookingFound(val booking: BookingDetails) : OperatorResult()
+    data class BookingFoundWithDto(val booking: BookingDetails, val originalDto: BookingDto) : OperatorResult()
     data class SessionResult(val response: OperatorSessionResponse) : OperatorResult()
     data class ProfileResult(val profile: OperatorUser) : OperatorResult()
+    data class StatusUpdateSuccess(val booking: BookingDto) : OperatorResult()
     data class Success(val message: String) : OperatorResult()
     data class Failure(val error: String) : OperatorResult()
 }
@@ -440,4 +442,10 @@ data class UpdateEVOwnerRequest(
     val address: String? = null,
     @SerializedName("dateOfBirth")
     val dateOfBirth: String? = null
+)
+
+// Operator booking status update models
+data class BookingStatusUpdateRequest(
+    @SerializedName("status")
+    val status: String // "InProgress" or "Completed"
 )
