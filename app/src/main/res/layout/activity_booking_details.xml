@@ -290,7 +290,7 @@
                 android:text="Confirm Booking &amp; Start Session"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                style="@style/Widget.Material3.Button"
+                style="@style/Widget.MaterialComponents.Button"
                 android:backgroundTint="@color/success_color"
                 android:layout_marginBottom="12dp" />
 
@@ -302,7 +302,7 @@
                 android:text="Finalize &amp; Complete Session"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                style="@style/Widget.Material3.Button"
+                style="@style/Widget.MaterialComponents.Button"
                 android:backgroundTint="@color/primary_color"
                 android:layout_marginBottom="12dp"
                 android:visibility="gone" />
@@ -314,7 +314,7 @@
                 android:layout_height="56dp"
                 android:text="Cancel"
                 android:textSize="16sp"
-                style="@style/Widget.Material3.Button.OutlinedButton"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 app:strokeColor="@color/error_color"
                 android:textColor="@color/error_color" />
 
