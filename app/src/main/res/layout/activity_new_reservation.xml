@@ -331,6 +331,22 @@
 
                     </com.google.android.material.textfield.TextInputLayout>
 
+                    <!-- Validation Message -->
+                    <TextView
+                        android:id="@+id/tv_validation_message"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:layout_marginBottom="8dp"
+                        android:padding="12dp"
+                        android:textSize="14sp"
+                        android:textColor="@color/white"
+                        android:background="@drawable/rounded_background"
+                        android:backgroundTint="@color/primary_blue"
+                        android:text="Select date, time, duration, and slot to validate availability"
+                        android:textAlignment="center"
+                        android:visibility="visible" />
+
                 </LinearLayout>
 
             </com.google.android.material.card.MaterialCardView>

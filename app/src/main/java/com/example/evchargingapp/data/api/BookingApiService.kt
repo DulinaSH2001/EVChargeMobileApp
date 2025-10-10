@@ -47,7 +47,8 @@ interface BookingApiService {
         @Query("chargingStationId") chargingStationId: String,
         @Query("slotNumber") slotNumber: Int,
         @Query("reservationDateTime") reservationDateTime: String,
-        @Query("duration") duration: Int
+        @Query("duration") duration: Int,
+        @Query("excludeBookingId") excludeBookingId: String? = null
     ): Response<ApiResponse<Boolean>>
     
     // Operator booking status update endpoint
