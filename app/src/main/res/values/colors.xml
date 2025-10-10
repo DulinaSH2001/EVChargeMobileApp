@@ -86,6 +86,7 @@
     <color name="status_occupied">#FF5722</color>
     <color name="status_maintenance">#FF9800</color>
     <color name="info_background">#E3F2FD</color>
+    <color name="info_color">#1976D2</color>
     
     <!-- Booking status colors -->
     <color name="status_pending">#F59E0B</color>

@@ -34,14 +34,12 @@ class ScannedBookingAdapter(
         private val tvBookingId: TextView = itemView.findViewById(R.id.tv_booking_id)
         private val tvStatus: TextView = itemView.findViewById(R.id.tv_status)
         private val tvStationName: TextView = itemView.findViewById(R.id.tv_station_name)
-        private val tvStationLocation: TextView = itemView.findViewById(R.id.tv_station_location)
         private val tvBookingDate: TextView = itemView.findViewById(R.id.tv_booking_date)
-        private val tvTimeSlot: TextView = itemView.findViewById(R.id.tv_time_slot)
-        private val tvChargingSlot: TextView = itemView.findViewById(R.id.tv_charging_slot)
+        private val tvStartTime: TextView = itemView.findViewById(R.id.tv_start_time)
+        private val tvChargingSlotId: TextView = itemView.findViewById(R.id.tv_charging_slot_id)
         private val tvVehicleNumber: TextView = itemView.findViewById(R.id.tv_vehicle_number)
         private val tvContactNumber: TextView = itemView.findViewById(R.id.tv_contact_number)
         private val tvScannedAt: TextView = itemView.findViewById(R.id.tv_scanned_at)
-        private val tvUpdatedAt: TextView = itemView.findViewById(R.id.tv_updated_at)
         private val layoutAdditionalInfo: LinearLayout = itemView.findViewById(R.id.layout_additional_info)
         private val btnComplete: Button = itemView.findViewById(R.id.btn_complete)
 
@@ -49,10 +47,9 @@ class ScannedBookingAdapter(
             tvEvOwnerName.text = booking.evOwnerName
             tvBookingId.text = "ID: ${booking.bookingId}"
             tvStationName.text = booking.stationName
-            tvStationLocation.text = booking.stationLocation
             tvBookingDate.text = booking.bookingDate
-            tvTimeSlot.text = "${booking.startTime} - ${booking.endTime}"
-            tvChargingSlot.text = "Slot ${booking.chargingSlotId}"
+            tvStartTime.text = "${booking.startTime} - ${booking.endTime}"
+            tvChargingSlotId.text = "Slot #${booking.chargingSlotId}"
 
             // Handle additional info
             val hasAdditionalInfo = !booking.vehicleNumber.isNullOrEmpty() || !booking.contactNumber.isNullOrEmpty()
@@ -88,9 +85,8 @@ class ScannedBookingAdapter(
                 }
             }
 
-            // Format timestamps
+            // Format timestamp
             tvScannedAt.text = "Scanned: ${formatTimestamp(booking.scannedAt)}"
-            tvUpdatedAt.text = "Updated: ${formatTimestamp(booking.updatedAt)}"
 
             // Set click listeners
             btnComplete.setOnClickListener {

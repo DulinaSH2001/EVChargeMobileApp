@@ -3,40 +3,64 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/card_booking"
+    android:id="@+id/card_scanned_booking"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:layout_marginHorizontal="12dp"
     android:layout_marginBottom="12dp"
-    app:cardCornerRadius="12dp"
-    app:cardElevation="3dp"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="4dp"
     app:strokeWidth="0dp"
-    app:cardBackgroundColor="@color/card_background">
+    app:cardBackgroundColor="@color/card_background"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?android:attr/selectableItemBackground">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="20dp">
 
-        <!-- Header Section -->
+        <!-- Header Section with Avatar and Status -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_marginBottom="12dp">
+            android:gravity="center_vertical"
+            android:layout_marginBottom="16dp">
 
+            <!-- Customer Avatar -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="2dp"
+                app:cardBackgroundColor="@color/primary_color">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_person"
+                    app:tint="@color/white" />
+
+            </androidx.cardview.widget.CardView>
+
+            <!-- Customer Info -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:orientation="vertical">
+                android:orientation="vertical"
+                android:layout_marginStart="12dp">
 
                 <TextView
                     android:id="@+id/tv_ev_owner_name"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="John Doe"
-                    android:textSize="18sp"
+                    android:textSize="16sp"
                     android:textStyle="bold"
                     android:textColor="@color/text_primary"
                     tools:text="John Doe" />
@@ -53,166 +77,253 @@
 
             </LinearLayout>
 
-            <TextView
-                android:id="@+id/tv_status"
+            <!-- Status Badge -->
+            <LinearLayout
+                android:id="@+id/layout_status"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="InProgress"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                android:textColor="@color/status_inprogress_text"
-                android:background="@drawable/status_inprogress_background"
+                android:background="@drawable/rounded_background"
+                android:backgroundTint="@color/status_inprogress_background"
                 android:paddingHorizontal="12dp"
                 android:paddingVertical="6dp"
-                android:layout_gravity="center_vertical"
-                tools:text="InProgress" />
+                android:gravity="center">
+
+                <TextView
+                    android:id="@+id/tv_status"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="In Progress"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/status_inprogress_text"
+                    tools:text="In Progress" />
+
+            </LinearLayout>
 
         </LinearLayout>
 
-        <!-- Station and Location -->
+        <!-- Scanning Info Banner -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_marginBottom="8dp">
+            android:gravity="center_vertical"
+            android:layout_marginBottom="16dp"
+            android:padding="12dp"
+            android:background="@drawable/rounded_background"
+            android:backgroundTint="@color/info_background">
 
             <ImageView
-                android:layout_width="16dp"
-                android:layout_height="16dp"
-                android:src="@drawable/ic_location"
-                app:tint="@color/text_secondary"
-                android:layout_marginEnd="8dp"
-                android:layout_gravity="center_vertical" />
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:src="@drawable/ic_qr_code"
+                app:tint="@color/info_color"
+                android:layout_marginEnd="8dp" />
+
+            <TextView
+                android:id="@+id/tv_scanned_at"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Scanned: Today at 09:15 AM"
+                android:textSize="13sp"
+                android:textColor="@color/info_color"
+                android:textStyle="bold"
+                tools:text="Scanned: Today at 09:15 AM" />
+
+        </LinearLayout>
+
+        <!-- Booking Details Grid -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/rounded_background"
+            android:backgroundTint="@color/background_light"
+            android:padding="16dp"
+            android:layout_marginBottom="16dp">
+
+            <!-- Station and Slot Row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="12dp">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <ImageView
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:src="@drawable/ic_location_on"
+                        app:tint="@color/accent_color"
+                        android:layout_marginEnd="6dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Station"
+                        android:textSize="12sp"
+                        android:textColor="@color/text_secondary" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <ImageView
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:src="@drawable/ic_electric_bolt"
+                        app:tint="@color/warning_color"
+                        android:layout_marginEnd="6dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Slot"
+                        android:textSize="12sp"
+                        android:textColor="@color/text_secondary" />
+
+                </LinearLayout>
+
+            </LinearLayout>
 
             <LinearLayout
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical">
+                android:orientation="horizontal"
+                android:layout_marginBottom="16dp">
 
                 <TextView
                     android:id="@+id/tv_station_name"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="Station Name"
+                    android:layout_weight="1"
+                    android:text="FastCharge Station"
                     android:textSize="14sp"
-                    android:textColor="@color/text_primary"
                     android:textStyle="bold"
-                    tools:text="Green Energy Station" />
+                    android:textColor="@color/text_primary"
+                    tools:text="FastCharge Station" />
 
                 <TextView
-                    android:id="@+id/tv_station_location"
-                    android:layout_width="wrap_content"
+                    android:id="@+id/tv_charging_slot_id"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="Location"
-                    android:textSize="12sp"
-                    android:textColor="@color/text_secondary"
-                    android:layout_marginTop="2dp"
-                    tools:text="123 Main Street, City" />
+                    android:layout_weight="1"
+                    android:text="Slot #3"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    tools:text="Slot #3" />
+
+            </LinearLayout>
+
+            <!-- Date and Time Row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <ImageView
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:src="@drawable/ic_calendar"
+                        app:tint="@color/success_color"
+                        android:layout_marginEnd="6dp" />
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Date"
+                            android:textSize="12sp"
+                            android:textColor="@color/text_secondary" />
+
+                        <TextView
+                            android:id="@+id/tv_booking_date"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="2024-01-15"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/text_primary"
+                            tools:text="2024-01-15" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <ImageView
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:src="@drawable/ic_schedule"
+                        app:tint="@color/info_color"
+                        android:layout_marginEnd="6dp" />
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Time"
+                            android:textSize="12sp"
+                            android:textColor="@color/text_secondary" />
+
+                        <TextView
+                            android:id="@+id/tv_start_time"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="09:00 - 10:00"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/text_primary"
+                            tools:text="09:00 - 10:00" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
 
             </LinearLayout>
 
         </LinearLayout>
 
-        <!-- Booking Details Row -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="8dp">
-
-            <!-- Date and Time -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:layout_marginEnd="12dp">
-
-                <TextView
-                    android:id="@+id/tv_booking_date"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="2024-01-15"
-                    android:textSize="13sp"
-                    android:textColor="@color/text_primary"
-                    android:textStyle="bold"
-                    tools:text="2024-01-15" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Date"
-                    android:textSize="10sp"
-                    android:textColor="@color/text_secondary"
-                    android:layout_marginTop="2dp" />
-
-            </LinearLayout>
-
-            <!-- Time Slot -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:layout_marginEnd="12dp">
-
-                <TextView
-                    android:id="@+id/tv_time_slot"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="10:00 - 11:00"
-                    android:textSize="13sp"
-                    android:textColor="@color/text_primary"
-                    android:textStyle="bold"
-                    tools:text="10:00 - 11:00" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Time Slot"
-                    android:textSize="10sp"
-                    android:textColor="@color/text_secondary"
-                    android:layout_marginTop="2dp" />
-
-            </LinearLayout>
-
-            <!-- Charging Slot -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical">
-
-                <TextView
-                    android:id="@+id/tv_charging_slot"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Slot 1"
-                    android:textSize="13sp"
-                    android:textColor="@color/text_primary"
-                    android:textStyle="bold"
-                    tools:text="Slot 1" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Charging Slot"
-                    android:textSize="10sp"
-                    android:textColor="@color/text_secondary"
-                    android:layout_marginTop="2dp" />
-
-            </LinearLayout>
-
-        </LinearLayout>
-
-        <!-- Vehicle and Contact Info (if available) -->
+        <!-- Vehicle and Contact Info (Optional) -->
         <LinearLayout
             android:id="@+id/layout_additional_info"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_marginBottom="12dp"
+            android:layout_marginBottom="16dp"
             android:visibility="gone">
 
             <LinearLayout
@@ -223,21 +334,22 @@
                 android:layout_marginEnd="12dp">
 
                 <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Vehicle Number"
+                    android:textSize="12sp"
+                    android:textColor="@color/text_secondary" />
+
+                <TextView
                     android:id="@+id/tv_vehicle_number"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="ABC-1234"
-                    android:textSize="12sp"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
                     android:textColor="@color/text_primary"
+                    android:layout_marginTop="4dp"
                     tools:text="ABC-1234" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Vehicle Number"
-                    android:textSize="10sp"
-                    android:textColor="@color/text_secondary"
-                    android:layout_marginTop="2dp" />
 
             </LinearLayout>
 
@@ -248,66 +360,61 @@
                 android:orientation="vertical">
 
                 <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Contact"
+                    android:textSize="12sp"
+                    android:textColor="@color/text_secondary" />
+
+                <TextView
                     android:id="@+id/tv_contact_number"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="+1234567890"
-                    android:textSize="12sp"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
                     android:textColor="@color/text_primary"
+                    android:layout_marginTop="4dp"
                     tools:text="+1234567890" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Contact"
-                    android:textSize="10sp"
-                    android:textColor="@color/text_secondary"
-                    android:layout_marginTop="2dp" />
 
             </LinearLayout>
 
         </LinearLayout>
 
-        <!-- Timestamps -->
+        <!-- Action Buttons -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_marginBottom="12dp">
+            android:gravity="end">
 
-            <TextView
-                android:id="@+id/tv_scanned_at"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Scanned: 2 hours ago"
-                android:textSize="11sp"
-                android:textColor="@color/text_tertiary"
-                tools:text="Scanned: 2 hours ago" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_complete"
+                android:layout_width="wrap_content"
+                android:layout_height="48dp"
+                android:text="Complete"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                style="@style/Widget.MaterialComponents.Button"
+                android:backgroundTint="@color/success_color"
+                app:cornerRadius="24dp"
+                android:paddingHorizontal="20dp"
+                android:layout_marginEnd="8dp"
+                android:visibility="gone" />
 
-            <TextView
-                android:id="@+id/tv_updated_at"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Updated: 1 hour ago"
-                android:textSize="11sp"
-                android:textColor="@color/text_tertiary"
-                android:gravity="end"
-                tools:text="Updated: 1 hour ago" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_view_details"
+                android:layout_width="wrap_content"
+                android:layout_height="48dp"
+                android:text="View Details"
+                android:textSize="14sp"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                app:strokeColor="@color/primary_color"
+                android:textColor="@color/primary_color"
+                app:cornerRadius="24dp"
+                android:paddingHorizontal="20dp" />
 
         </LinearLayout>
-
-        <!-- Action Button -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_complete"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Mark as Completed"
-            android:textColor="@android:color/white"
-            android:backgroundTint="@color/primary_blue"
-            app:cornerRadius="8dp"
-            android:visibility="gone" />
 
     </LinearLayout>
 
